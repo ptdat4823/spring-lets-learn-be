@@ -35,7 +35,7 @@ public class Question {
     private String data;
 
     @OneToMany
-    @JoinColumn(name = "choices", referencedColumnName = "id")
+    @JoinColumn(name = "question_id", referencedColumnName = "id")
     private Set<QuestionChoice> choices;
 
     @ManyToOne

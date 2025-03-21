@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -31,4 +33,8 @@ public class Course {
     @ManyToOne()
     @JoinColumn(name = "creator_id", referencedColumnName = "id")
     private User creator;
+
+    @OneToMany
+    @JoinColumn(name = "course_id", referencedColumnName = "id")
+    private List<Section> sections;
 }

@@ -1,14 +1,12 @@
 package com.letslive.letslearnbackend.dto;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -27,5 +25,6 @@ public class CourseDTO {
     private String category;
     private String level;
     private Boolean isPublished = false;
-    private UUID creatorId;
+    private UserDTO creator;
+    private List<SectionDTO> sections;
 }

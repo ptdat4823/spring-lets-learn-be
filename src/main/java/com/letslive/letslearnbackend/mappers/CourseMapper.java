@@ -5,7 +5,7 @@ import com.letslive.letslearnbackend.entities.Course;
 
 public class CourseMapper {
     public static CourseDTO mapToDTO(Course course) {
-        return CourseDTO
+        CourseDTO.CourseDTOBuilder builder = CourseDTO
                 .builder()
                 .id(course.getId())
                 .title(course.getTitle())
@@ -13,13 +13,21 @@ public class CourseMapper {
                 .imageUrl(course.getImageUrl())
                 .category(course.getCategory())
                 .level(course.getLevel())
-                .isPublished(course.getIsPublished())
-                .creatorId(course.getCreator().getId())
-                .build();
+                .isPublished(course.getIsPublished());
+
+        if (course.getSections() != null) {
+            builder.sections(course.getSections().stream().map(section -> SectionMapper.mapToDTO(section)).toList());
+        }
+
+        if (course.getCreator() != null) {
+                builder.creator(UserMapper.mapToDTO(course.getCreator()));
+        }
+
+        return builder.build();
     }
 
     public static Course mapToEntity(CourseDTO courseDTO) {
-        return Course
+        Course.CourseBuilder builder = Course
                 .builder()
                 .id(courseDTO.getId())
                 .title(courseDTO.getTitle())
@@ -27,7 +35,12 @@ public class CourseMapper {
                 .imageUrl(courseDTO.getImageUrl())
                 .category(courseDTO.getCategory())
                 .level(courseDTO.getLevel())
-                .isPublished(courseDTO.getIsPublished())
-                .build();
+                .isPublished(courseDTO.getIsPublished());
+
+        if (courseDTO.getCreator() != null) {
+            builder.creator(UserMapper.mapToEntity(courseDTO.getCreator()));
+        }
+
+        return builder.build();
     }
 }
