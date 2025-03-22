@@ -53,10 +53,10 @@ public class TopicQuiz {
     @JsonProperty("attemptAllowed")
     private String attemptAllowed;
 
-    @JsonProperty("questions")
-    @Column(columnDefinition = "jsonb")
+    //@JsonProperty("questions")
+    //@Column(columnDefinition = "jsonb")
     //@Convert(converter = JsonbConverter.class)
-    private String questions;
+    //private String questions;
 }
 
 

@@ -9,13 +9,15 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.session.SessionManagementFilter;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter, CorsConfigurationSource corsConfigurationSource) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(se -> se.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -27,6 +29,7 @@ public class SecurityConfig {
                     a.anyRequest().permitAll();
                 })
                 .addFilterAfter(jwtAuthFilter, SessionManagementFilter.class)
+                .cors(c -> c.configurationSource(corsConfigurationSource))
                 .build();
     }
 }
