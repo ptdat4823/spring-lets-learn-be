@@ -30,13 +30,14 @@ public class Question {
     private String type;
     private BigDecimal defaultMark;
     private Long usage;
-    
-    @Column(columnDefinition = "jsonb")
-    private String data;
+    private String feedbackOfTrue;
+    private String feedbackOfFalse;
+    private boolean correctAnswer; // for true false question
+    private boolean multiple; // for multiple choices questions
 
     @OneToMany
     @JoinColumn(name = "question_id", referencedColumnName = "id")
-    private Set<QuestionChoice> choices;
+    private Set<QuestionChoice> choices; // for choices and short answer question
 
     @ManyToOne
     @JoinColumn(name = "created_by", referencedColumnName = "id")

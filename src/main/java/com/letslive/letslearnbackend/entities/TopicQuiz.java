@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -53,10 +54,12 @@ public class TopicQuiz {
     @JsonProperty("attemptAllowed")
     private String attemptAllowed;
 
-    //@JsonProperty("questions")
     //@Column(columnDefinition = "jsonb")
     //@Convert(converter = JsonbConverter.class)
-    //private String questions;
+    @OneToMany
+    @JoinColumn(name = "topic_quiz_id", referencedColumnName = "id")
+    @JsonProperty("questions")
+    private List<TopicQuizQuestion> questions;
 }
 
 
