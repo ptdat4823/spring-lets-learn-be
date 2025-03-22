@@ -3,8 +3,6 @@ package com.letslive.letslearnbackend.mappers;
 import com.letslive.letslearnbackend.dto.TopicDTO;
 import com.letslive.letslearnbackend.entities.Topic;
 
-import java.util.UUID;
-
 public class TopicMapper {
     public static Topic toEntity(TopicDTO topicDTO) {
         Topic.TopicBuilder builder = Topic
