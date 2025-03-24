@@ -23,6 +23,6 @@ public class TopicQuizQuestionChoice {
     private BigDecimal gradePercent;
     private String feedback;
 
-    //@Column(name = "question_id")
-    //private Long questionId;
+    @Column(name = "quiz_question_id")
+    private Long questionId;
 }

@@ -2,6 +2,7 @@ package com.letslive.letslearnbackend.entities;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,7 +15,8 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-class QuestionChoice {
+@Builder
+public class QuestionChoice {
     @Id
     @GeneratedValue(generator = "UUID")
     private UUID id;

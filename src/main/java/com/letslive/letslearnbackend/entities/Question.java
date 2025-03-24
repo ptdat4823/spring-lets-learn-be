@@ -2,11 +2,13 @@ package com.letslive.letslearnbackend.entities;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -15,6 +17,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Question {
     @Id
     @GeneratedValue(generator = "UUID")
@@ -37,7 +40,7 @@ public class Question {
 
     @OneToMany
     @JoinColumn(name = "question_id", referencedColumnName = "id")
-    private Set<QuestionChoice> choices; // for choices and short answer question
+    private List<QuestionChoice> choices; // for choices and short answer question
 
     @ManyToOne
     @JoinColumn(name = "created_by", referencedColumnName = "id")
@@ -46,4 +49,8 @@ public class Question {
     @ManyToOne
     @JoinColumn(name = "modified_by", referencedColumnName = "id")
     private User modifiedBy;
+
+    @ManyToOne
+    @JoinColumn(name = "course_id", referencedColumnName = "id")
+    private Course course;
 }
