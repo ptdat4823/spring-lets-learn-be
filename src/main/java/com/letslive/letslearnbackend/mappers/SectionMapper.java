@@ -3,6 +3,8 @@ package com.letslive.letslearnbackend.mappers;
 import com.letslive.letslearnbackend.dto.SectionDTO;
 import com.letslive.letslearnbackend.entities.Section;
 
+import java.util.ArrayList;
+
 public class SectionMapper {
     public static Section mapToEntity(SectionDTO sectionDTO) {
         Section.SectionBuilder builder = Section
@@ -27,7 +29,7 @@ public class SectionMapper {
 
         if (section.getTopics() != null) {
             builder.topics(section.getTopics());
-        }
+        } else builder.topics(new ArrayList<>());
 
         return builder.build();
     }
