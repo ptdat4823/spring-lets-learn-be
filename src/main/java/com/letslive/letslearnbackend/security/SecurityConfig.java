@@ -26,6 +26,7 @@ public class SecurityConfig {
                     a.requestMatchers("/user/**").authenticated();
                     a.requestMatchers("/section/**").authenticated();
                     a.requestMatchers("/topic/**").authenticated();
+                    a.requestMatchers("/question/**").authenticated();
                     a.anyRequest().permitAll();
                 })
                 .addFilterAfter(jwtAuthFilter, SessionManagementFilter.class)

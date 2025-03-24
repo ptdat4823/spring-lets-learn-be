@@ -25,7 +25,6 @@ public class QuestionChoice {
     private BigDecimal gradePercent;
     private String feedback;
 
-    @ManyToOne
-    @JoinColumn(name = "question_id", referencedColumnName = "id")
-    private Question question;
+    @Column(name = "question_id")
+    private UUID questionId;
 }

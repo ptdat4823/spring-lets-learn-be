@@ -11,7 +11,8 @@ public class QuestionChoiceMapper {
                 .id(questionChoice.getId())
                 .text(questionChoice.getText())
                 .feedback(questionChoice.getFeedback())
-                .gradePercent(questionChoice.getGradePercent());
+                .gradePercent(questionChoice.getGradePercent())
+                .questionId(questionChoice.getQuestionId());
 
         return builder.build();
     }
@@ -22,7 +23,8 @@ public class QuestionChoiceMapper {
                 .id(dto.getId())
                 .text(dto.getText())
                 .feedback(dto.getFeedback())
-                .gradePercent(dto.getGradePercent());
+                .gradePercent(dto.getGradePercent())
+                .questionId(dto.getQuestionId());
 
         return builder.build();
     }

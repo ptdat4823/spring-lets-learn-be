@@ -16,4 +16,5 @@ public class QuestionChoiceDTO {
     private String text;
     private BigDecimal gradePercent;
     private String feedback;
+    private UUID questionId;
 }

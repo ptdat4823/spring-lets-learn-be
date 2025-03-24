@@ -42,11 +42,13 @@ public class QuestionController {
         return ResponseEntity.ok(questionService.getAllQuestionsByCourseId(courseId));
     }
 
-    public ResponseEntity<QuestionDTO> getQuestionById(UUID questionId) {
+    @GetMapping("/{id}")
+    public ResponseEntity<QuestionDTO> getQuestionById(@PathVariable("id") UUID questionId) {
         return ResponseEntity.ok(questionService.getQuestionById(questionId));
     }
 
-    public ResponseEntity<QuestionDTO> updateQuestion(@PathVariable UUID questionId, QuestionDTO questionDTO) {
+    @PutMapping("/{id}")
+    public ResponseEntity<QuestionDTO> updateQuestion(@PathVariable("id") UUID questionId, QuestionDTO questionDTO) {
         return ResponseEntity.ok(questionService.updateQuestion(questionId, questionDTO));
     }
 }
