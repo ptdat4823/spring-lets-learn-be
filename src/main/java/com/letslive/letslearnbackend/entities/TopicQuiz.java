@@ -2,7 +2,6 @@ package com.letslive.letslearnbackend.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.letslive.letslearnbackend.utils.JsonbConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,9 +25,6 @@ public class TopicQuiz {
     @JsonIgnore
     @Column(nullable = false, name = "topic_id")
     private UUID topicId;
-
-    @JsonProperty("name")
-    private String name;
 
     @JsonProperty("description")
     private String description;

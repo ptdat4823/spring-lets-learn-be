@@ -22,7 +22,7 @@ public class Topic {
     private UUID id;
     private String title;
     private String type;
-    private String attachedFile;
+
     @Column(name = "section_id")
     private UUID sectionId;
 }

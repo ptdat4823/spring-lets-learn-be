@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.print.attribute.standard.Media;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,5 +36,10 @@ public class SectionController {
     public ResponseEntity<SectionDTO> createSection(@RequestBody @Valid SectionDTO sectionDTO) {
         SectionDTO createdSection = sectionService.saveSection(sectionDTO);
         return ResponseEntity.ok(createdSection);
+    }
+
+    @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<SectionDTO> updateSection(@PathVariable UUID id, @RequestBody @Valid SectionDTO sectionDTO) {
+        return ResponseEntity.ok(sectionService.updateSection(id, sectionDTO));
     }
 }

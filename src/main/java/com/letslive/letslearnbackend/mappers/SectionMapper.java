@@ -15,6 +15,10 @@ public class SectionMapper {
                 .courseId(sectionDTO.getCourseId())
                 .position(sectionDTO.getPosition());
 
+        if (sectionDTO.getTopics() != null) {
+            builder.topics(sectionDTO.getTopics().stream().map(topicDTO -> TopicMapper.toEntity(topicDTO)).toList());
+        } else builder.topics(new ArrayList<>());
+
         return builder.build();
     }
 
@@ -28,7 +32,7 @@ public class SectionMapper {
                 .position(section.getPosition());
 
         if (section.getTopics() != null) {
-            builder.topics(section.getTopics());
+            builder.topics(section.getTopics().stream().map(topicEntity -> TopicMapper.toDTO(topicEntity)).toList());
         } else builder.topics(new ArrayList<>());
 
         return builder.build();

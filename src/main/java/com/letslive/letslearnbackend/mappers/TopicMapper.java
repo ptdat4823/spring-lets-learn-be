@@ -11,10 +11,6 @@ public class TopicMapper {
                 .title(topicDTO.getTitle())
                 .type(topicDTO.getType());
 
-        if (topicDTO.getAttachedFile() != null && !topicDTO.getAttachedFile().isBlank()) {
-            builder.attachedFile(topicDTO.getAttachedFile());
-        }
-
         return builder.build();
     }
 
@@ -24,8 +20,7 @@ public class TopicMapper {
                 .id(topic.getId())
                 .sectionId(topic.getSectionId())
                 .title(topic.getTitle())
-                .type(topic.getType())
-                .attachedFile(topic.getAttachedFile());
+                .type(topic.getType());
 
         return builder.build();
     }

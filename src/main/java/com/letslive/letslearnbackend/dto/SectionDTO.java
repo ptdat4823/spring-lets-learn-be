@@ -20,5 +20,5 @@ public class SectionDTO {
     private String title;
     private String description;
     private UUID courseId;
-    private List<Topic> topics;
+    private List<TopicDTO> topics;
 }
