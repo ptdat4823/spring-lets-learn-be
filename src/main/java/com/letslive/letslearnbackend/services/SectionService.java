@@ -39,6 +39,14 @@ public class SectionService {
         sectionRepository.findById(sectionID).orElseThrow(() -> new CustomException("Section not found!", HttpStatus.NOT_FOUND));
         sectionRepository.save(SectionMapper.mapToEntity(sectionDTO));
 
+        // soft delete topics that don't appear in the dto
+        topicRepository.findAllBySectionId(sectionID).forEach(topic -> {
+            if (sectionDTO.getTopics().stream().anyMatch(topicDTO -> topicDTO.getId().equals(topic.getId()))) {
+                topic.setSectionId(null);
+                topicRepository.save(topic);
+            }
+        });
+
         sectionDTO.getTopics().stream().forEach(topic -> {
             topicRepository.save(TopicMapper.toEntity(topic));
         });

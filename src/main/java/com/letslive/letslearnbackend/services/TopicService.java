@@ -69,7 +69,7 @@ public class TopicService {
 
     public TopicDTO updateTopic(TopicDTO topicDTO) {
         Topic topic = topicRepository.findById(topicDTO.getId()).orElseThrow(() -> new CustomException("No topic found!", HttpStatus.NOT_FOUND));
-        Topic updatedTopic = topicRepository.save(topic);
+        Topic updatedTopic = topicRepository.save(TopicMapper.toEntity(topicDTO));
         return TopicMapper.toDTO(updatedTopic);
     }
 
