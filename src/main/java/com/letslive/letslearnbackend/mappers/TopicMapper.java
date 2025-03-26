@@ -7,6 +7,7 @@ public class TopicMapper {
     public static Topic toEntity(TopicDTO topicDTO) {
         Topic.TopicBuilder builder = Topic
                 .builder()
+                .id(topicDTO.getId())
                 .sectionId(topicDTO.getSectionId())
                 .title(topicDTO.getTitle())
                 .type(topicDTO.getType());

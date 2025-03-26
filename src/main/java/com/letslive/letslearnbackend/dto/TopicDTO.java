@@ -12,7 +12,6 @@ public class TopicDTO {
     private UUID sectionId;
     private String title;
     private String type;
-    private String attachedFile;
     private String data;
 }
 

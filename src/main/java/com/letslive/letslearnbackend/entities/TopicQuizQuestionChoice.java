@@ -1,5 +1,6 @@
 package com.letslive.letslearnbackend.entities;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,12 +18,18 @@ import java.util.UUID;
 public class TopicQuizQuestionChoice {
     @Id
     @GeneratedValue(generator = "UUID")
+    @JsonProperty("id")
     private UUID id;
 
+    @JsonProperty("text")
     private String text;
+
+    @JsonProperty("gradePercent")
     private BigDecimal gradePercent;
+
+    @JsonProperty("feedback")
     private String feedback;
 
-    @Column(name = "quiz_question_id")
+    @Column(name = "quiz_question_id", nullable = false)
     private Long questionId;
 }

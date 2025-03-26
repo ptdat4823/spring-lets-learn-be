@@ -20,10 +20,11 @@ import java.util.UUID;
 public class TopicQuiz {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonProperty("id")
     private Long id;
 
-    @JsonIgnore
     @Column(nullable = false, name = "topic_id")
+    @JsonProperty("topicId")
     private UUID topicId;
 
     @JsonProperty("description")
