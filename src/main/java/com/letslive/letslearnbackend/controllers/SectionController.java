@@ -34,7 +34,7 @@ public class SectionController {
 
     @PostMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SectionDTO> createSection(@RequestBody @Valid SectionDTO sectionDTO) {
-        SectionDTO createdSection = sectionService.saveSection(sectionDTO);
+        SectionDTO createdSection = sectionService.createSection(sectionDTO);
         return ResponseEntity.ok(createdSection);
     }
 

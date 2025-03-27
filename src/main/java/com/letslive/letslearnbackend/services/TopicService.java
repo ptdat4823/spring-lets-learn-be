@@ -34,6 +34,12 @@ public class TopicService {
     public TopicDTO createTopic(TopicDTO topicDTO) {
         Topic topic = TopicMapper.toEntity(topicDTO);
         Topic createdTopic = topicRepository.save(topic);
+
+        // check if there is data, if not then just return
+        if (topicDTO.getData() == null || topicDTO.getData().isEmpty()) {
+            return TopicMapper.toDTO(createdTopic);
+        }
+
         String createdTopicData;
 
         switch (topic.getType()) {
@@ -85,6 +91,11 @@ public class TopicService {
     public TopicDTO updateTopic(TopicDTO topicDTO) {
         topicRepository.findById(topicDTO.getId()).orElseThrow(() -> new CustomException("No topic found!", HttpStatus.NOT_FOUND));
         Topic updatedTopic = topicRepository.save(TopicMapper.toEntity(topicDTO));
+
+        // check if there is data, if not then just return
+        if (topicDTO.getData() == null || topicDTO.getData().isEmpty()) {
+            return TopicMapper.toDTO(updatedTopic);
+        }
         String updatedTopicData;
 
         switch (topicDTO.getType().toLowerCase()) {
@@ -119,12 +130,12 @@ public class TopicService {
 
                     // BUG: RETURNING OLD DATA
                     topicQuizRepository.flush();
-                    TopicQuiz updatedTopicQuiz = topicQuizRepository.findById(topicQuiz.getId()).orElseThrow(() -> new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR));
-                    updatedTopicData = mapper.writeValueAsString(updatedTopicQuiz);
+                    TopicQuiz updatedTopicQuizData = topicQuizRepository.findById(topicQuiz.getId()).orElseThrow(() -> new CustomException("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR));
+                    updatedTopicData = mapper.writeValueAsString(updatedTopicQuizData);
                 } catch (JsonProcessingException e) {
                     throw new CustomException("Error parsing quiz data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
                 } catch (Exception e) {
-                    throw new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR);
+                    throw new CustomException("Something went wrong: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
                 }
                 break;
             case "assigment":

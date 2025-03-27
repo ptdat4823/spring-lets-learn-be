@@ -19,13 +19,14 @@ import java.util.UUID;
 public class SectionService {
     private final SectionRepository sectionRepository;
     private final TopicRepository topicRepository;
+    private final TopicService topicService;
 
 //    public List<SectionDTO> getAllSectionsByCourseID(UUID courseID) {
 //        List<Section> sections = sectionRepository.getByCourseId(courseID);
 //        return sections.stream().map((section -> SectionMapper.mapToDTO(section))).toList();
 //    }
 
-    public SectionDTO saveSection(SectionDTO sectionDTO) {
+    public SectionDTO createSection(SectionDTO sectionDTO) {
         Section section = sectionRepository.save(SectionMapper.mapToEntity(sectionDTO));
         return SectionMapper.mapToDTO(section);
     }
@@ -39,16 +40,18 @@ public class SectionService {
         sectionRepository.findById(sectionID).orElseThrow(() -> new CustomException("Section not found!", HttpStatus.NOT_FOUND));
         sectionRepository.save(SectionMapper.mapToEntity(sectionDTO));
 
-        // soft delete topics that don't appear in the dto
+        // delete topics that don't appear in the dto
         topicRepository.findAllBySectionId(sectionID).forEach(topic -> {
             if (sectionDTO.getTopics().stream().anyMatch(topicDTO -> topicDTO.getId().equals(topic.getId()))) {
-                topic.setSectionId(null);
-                topicRepository.save(topic);
+                topicRepository.deleteById(topic.getId());
             }
         });
 
-        sectionDTO.getTopics().stream().forEach(topic -> {
-            topicRepository.save(TopicMapper.toEntity(topic));
+        // save all information in dto
+        sectionDTO.getTopics().forEach(topic -> {
+            if (topic.getId() == null || !topicRepository.findById(topic.getId()).isPresent()) {
+                topicService.createTopic(topic);
+            } else topicService.updateTopic(topic);
         });
 
         return SectionMapper.mapToDTO(sectionRepository.findById(sectionID).orElseThrow(() -> new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR)));
