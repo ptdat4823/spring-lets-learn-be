@@ -7,6 +7,7 @@ import com.letslive.letslearnbackend.mappers.SectionMapper;
 import com.letslive.letslearnbackend.mappers.TopicMapper;
 import com.letslive.letslearnbackend.repositories.SectionRepository;
 import com.letslive.letslearnbackend.repositories.TopicRepository;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -36,23 +37,28 @@ public class SectionService {
         return SectionMapper.mapToDTO(section);
     }
 
+    @Transactional
     public SectionDTO updateSection(UUID sectionID, SectionDTO sectionDTO) {
-        sectionRepository.findById(sectionID).orElseThrow(() -> new CustomException("Section not found!", HttpStatus.NOT_FOUND));
+        if (!sectionRepository.existsById(sectionID))
+            throw new CustomException("Section not found!", HttpStatus.NOT_FOUND);
+
         sectionRepository.save(SectionMapper.mapToEntity(sectionDTO));
 
         // delete topics that don't appear in the dto
         topicRepository.findAllBySectionId(sectionID).forEach(topic -> {
-            if (sectionDTO.getTopics().stream().anyMatch(topicDTO -> topicDTO.getId().equals(topic.getId()))) {
+            if (!sectionDTO.getTopics().stream().anyMatch(topicDTO -> topicDTO.getId().equals(topic.getId()))) {
                 topicRepository.deleteById(topic.getId());
             }
         });
 
         // save all information in dto
-        sectionDTO.getTopics().forEach(topic -> {
-            if (topic.getId() == null || !topicRepository.findById(topic.getId()).isPresent()) {
-                topicService.createTopic(topic);
-            } else topicService.updateTopic(topic);
-        });
+        if (sectionDTO.getTopics() != null) {
+            sectionDTO.getTopics().forEach(topic -> {
+                if (topic.getId() == null || !topicRepository.existsById(topic.getId())) {
+                    topicService.createTopic(topic);
+                } else topicService.updateTopic(topic);
+            });
+        }
 
         return SectionMapper.mapToDTO(sectionRepository.findById(sectionID).orElseThrow(() -> new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR)));
     }
