@@ -29,8 +29,8 @@ public class QuestionDTO {
     private Long usage;
     private String feedbackOfTrue;
     private String feedbackOfFalse;
-    private boolean correctAnswer; // for true false question
-    private boolean multiple; // for multiple choices questions
+    private Boolean correctAnswer; // for true false question
+    private Boolean multiple; // for multiple choices questions
 
     private List<QuestionChoiceDTO> choices; // for choices and short answer question
 
