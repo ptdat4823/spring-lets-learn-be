@@ -32,9 +32,9 @@ public class CourseController {
     private final UserService userService;
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<CourseDTO>> getCoursesByUserID(@RequestParam UUID userID) {
-        userService.findUserById(userID); // check if user exists
-        List<CourseDTO> courses = courseService.getAllCoursesByUserID(userID);
+    public ResponseEntity<List<CourseDTO>> getCoursesByUserID(@RequestParam UUID userId) {
+        userService.findUserById(userId); // check if user exists
+        List<CourseDTO> courses = courseService.getAllCoursesByUserID(userId);
         return new ResponseEntity<>(courses, HttpStatus.OK);
     }
 
