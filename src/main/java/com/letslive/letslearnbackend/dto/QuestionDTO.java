@@ -36,7 +36,7 @@ public class QuestionDTO {
 
     private UserDTO createdBy;
     private UserDTO modifiedBy;
-    //private CourseDTO course;
+    private CourseDTO course;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

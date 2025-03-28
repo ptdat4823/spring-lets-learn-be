@@ -18,6 +18,7 @@ public class QuestionMapper {
                 .type(question.getType())
                 .defaultMark(question.getDefaultMark())
                 .usage(question.getUsage())
+                .status(question.getStatus())
                 .feedbackOfFalse(question.getFeedbackOfFalse())
                 .feedbackOfTrue(question.getFeedbackOfTrue())
                 .choices(question.getChoices().stream().map(choice -> QuestionChoiceMapper.toDTO(choice)).toList())
@@ -41,6 +42,7 @@ public class QuestionMapper {
                 .type(questionDTO.getType())
                 .defaultMark(questionDTO.getDefaultMark())
                 .usage(questionDTO.getUsage())
+                .status(questionDTO.getStatus())
                 .feedbackOfFalse(questionDTO.getFeedbackOfFalse())
                 .feedbackOfTrue(questionDTO.getFeedbackOfTrue())
                 .choices(questionDTO.getChoices().stream().map(choice -> QuestionChoiceMapper.toEntity(choice)).toList())
@@ -50,7 +52,8 @@ public class QuestionMapper {
                 .modifiedBy(UserMapper.mapToEntity(questionDTO.getModifiedBy()))
                 .updatedAt(questionDTO.getUpdatedAt())
                 .createdAt(questionDTO.getCreatedAt())
-                .deletedAt(questionDTO.getDeletedAt());
+                .deletedAt(questionDTO.getDeletedAt())
+                .course(CourseMapper.mapToEntity(questionDTO.getCourse()));
 
         return builder.build();
     }
