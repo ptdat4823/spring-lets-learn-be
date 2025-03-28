@@ -20,6 +20,7 @@ public class QuestionMapper {
                 .usage(question.getUsage())
                 .feedbackOfFalse(question.getFeedbackOfFalse())
                 .feedbackOfTrue(question.getFeedbackOfTrue())
+                .courseId(question.getCourseId())
                 .choices(question.getChoices().stream().map(choice -> QuestionChoiceMapper.toDTO(choice)).toList())
                 .correctAnswer(question.isCorrectAnswer())
                 .multiple(question.isMultiple())
@@ -36,6 +37,7 @@ public class QuestionMapper {
         Question.QuestionBuilder builder = Question.builder();
         builder
                 .id(questionDTO.getId())
+                .courseId(questionDTO.getCourseId())
                 .questionName(questionDTO.getQuestionName())
                 .questionText(questionDTO.getQuestionText())
                 .type(questionDTO.getType())

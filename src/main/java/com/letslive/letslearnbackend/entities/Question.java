@@ -22,6 +22,8 @@ public class Question {
     @Id
     @GeneratedValue(generator = "UUID")
     private UUID id;
+
+    private UUID courseId;
     
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -49,8 +51,4 @@ public class Question {
     @ManyToOne
     @JoinColumn(name = "modified_by", referencedColumnName = "id")
     private User modifiedBy;
-
-    @ManyToOne
-    @JoinColumn(name = "course_id", referencedColumnName = "id")
-    private Course course;
 }

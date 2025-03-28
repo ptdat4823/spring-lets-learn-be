@@ -21,6 +21,7 @@ import java.util.UUID;
 @Builder
 public class QuestionDTO {
     private UUID id;
+    private UUID courseId;
     private String questionName;
     private String questionText;
     private String status;
