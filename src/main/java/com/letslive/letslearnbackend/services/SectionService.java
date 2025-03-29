@@ -1,7 +1,9 @@
 package com.letslive.letslearnbackend.services;
 
 import com.letslive.letslearnbackend.dto.SectionDTO;
+import com.letslive.letslearnbackend.dto.TopicDTO;
 import com.letslive.letslearnbackend.entities.Section;
+import com.letslive.letslearnbackend.entities.Topic;
 import com.letslive.letslearnbackend.exception.CustomException;
 import com.letslive.letslearnbackend.mappers.SectionMapper;
 import com.letslive.letslearnbackend.mappers.TopicMapper;
@@ -45,21 +47,23 @@ public class SectionService {
         sectionRepository.save(SectionMapper.mapToEntity(sectionDTO));
 
         // delete topics that don't appear in the dto
-        topicRepository.findAllBySectionId(sectionID).forEach(topic -> {
+        List<Topic> topics = topicRepository.findAllBySectionId(sectionID);
+        topics.forEach(topic -> {
             if (!sectionDTO.getTopics().stream().anyMatch(topicDTO -> topicDTO.getId().equals(topic.getId()))) {
                 topicRepository.deleteById(topic.getId());
             }
         });
 
         // save all information in dto
-        if (sectionDTO.getTopics() != null) {
+        List<TopicDTO> topicsOfSection = sectionDTO.getTopics();
+        if (topicsOfSection != null) {
             sectionDTO.getTopics().forEach(topic -> {
                 if (topic.getId() == null || !topicRepository.existsById(topic.getId())) {
                     topicService.createTopic(topic);
                 } else topicService.updateTopic(topic);
             });
         }
-
-        return SectionMapper.mapToDTO(sectionRepository.findById(sectionID).orElseThrow(() -> new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR)));
+        Section updatedSection = sectionRepository.findById(sectionID).orElseThrow(() -> new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR));
+        return SectionMapper.mapToDTO(updatedSection);
     }
 }

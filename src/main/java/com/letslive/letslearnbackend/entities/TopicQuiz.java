@@ -31,10 +31,10 @@ public class TopicQuiz {
     private String description;
 
     @JsonProperty("open")
-    private LocalDateTime open;
+    private String open;
 
     @JsonProperty("close")
-    private LocalDateTime close;
+    private String close;
 
     @JsonProperty("timeLimit")
     private Number timeLimit;
