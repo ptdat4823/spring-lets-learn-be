@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;
 
-public interface TopicQuizRepository extends JpaRepository<TopicQuiz, Long> {
+public interface TopicQuizRepository extends JpaRepository<TopicQuiz, UUID> {
     TopicQuiz findByTopicId(UUID topicId);
 }

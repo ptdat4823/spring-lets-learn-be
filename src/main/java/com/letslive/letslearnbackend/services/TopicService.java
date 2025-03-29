@@ -53,7 +53,7 @@ public class TopicService {
                     // save the questions and its choices
                     topicQuiz.getQuestions().forEach(question -> {
                         question.setTopicQuizId(topicQuiz.getId());
-                        Long createdQuestionId = topicQuizQuestionRepository.save(question).getId();
+                        UUID createdQuestionId = topicQuizQuestionRepository.save(question).getId();
 
                         question.getChoices().forEach(c -> {
                             c.setQuestionId(createdQuestionId); // Use the ID of the parent question
@@ -119,7 +119,7 @@ public class TopicService {
                     topicQuiz.getQuestions().forEach(question -> {
                         question.setId(null);
                         question.setTopicQuizId(topicQuiz.getId());
-                        Long createdQuestionId = topicQuizQuestionRepository.save(question).getId();
+                        UUID createdQuestionId = topicQuizQuestionRepository.save(question).getId();
 
                         question.getChoices().forEach(c -> {
                             c.setId(null); // remove "set id", generate a new id please
