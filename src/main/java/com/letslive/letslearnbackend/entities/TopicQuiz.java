@@ -19,9 +19,9 @@ import java.util.UUID;
 @Builder
 public class TopicQuiz {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @JsonProperty("id")
-    private Long id;
+    private UUID id;
 
     @Column(nullable = false, name = "topic_id")
     @JsonProperty("topicId")

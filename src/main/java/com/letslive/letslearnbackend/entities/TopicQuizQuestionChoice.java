@@ -31,5 +31,5 @@ public class TopicQuizQuestionChoice {
     private String feedback;
 
     @Column(name = "quiz_question_id", nullable = false)
-    private Long questionId;
+    private UUID questionId;
 }
