@@ -58,6 +58,7 @@ public class SectionService {
         List<TopicDTO> topicsOfSection = sectionDTO.getTopics();
         if (topicsOfSection != null) {
             sectionDTO.getTopics().forEach(topic -> {
+                topic.setSectionId(sectionID);
                 if (topic.getId() == null || !topicRepository.existsById(topic.getId())) {
                     topicService.createTopic(topic);
                 } else topicService.updateTopic(topic);

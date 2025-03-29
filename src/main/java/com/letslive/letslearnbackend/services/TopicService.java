@@ -52,6 +52,7 @@ public class TopicService {
 
                     // save the questions and its choices
                     topicQuiz.getQuestions().forEach(question -> {
+                        question.setId(null);
                         question.setTopicQuizId(topicQuiz.getId());
                         UUID createdQuestionId = topicQuizQuestionRepository.save(question).getId();
 
@@ -71,6 +72,7 @@ public class TopicService {
             case "assigment":
                 try {
                     TopicAssigment topicAssigment = mapper.readValue(topicDTO.getData(), TopicAssigment.class);
+                    topicAssigment.setId(null);
                     topicAssigment.setTopicId(createdTopic.getId());
                     TopicAssigment createdTopicAssigment = topicAssigmentRepository.save(topicAssigment);
                     createdTopicData = mapper.writeValueAsString(createdTopicAssigment);
