@@ -48,7 +48,7 @@ public class QuestionController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<QuestionDTO> updateQuestion(@PathVariable("id") UUID questionId, QuestionDTO questionDTO) {
+    public ResponseEntity<QuestionDTO> updateQuestion(@PathVariable("id") UUID questionId,@RequestBody QuestionDTO questionDTO) {
         return ResponseEntity.ok(questionService.updateQuestion(questionId, questionDTO));
     }
 }
