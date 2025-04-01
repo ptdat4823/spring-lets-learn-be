@@ -2,27 +2,25 @@ package com.letslive.letslearnbackend.entities;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Entity
-@Table(name = "student_responses")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class StudentResponse {
+@Builder
+public class QuizResponseAnswer {
     @Id
-    @GeneratedValue(generator = "UUID")
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    
-    @ManyToOne
-    private User student;
 
-    @ManyToOne
-    private Question question;
+    private String question; // hold the question data as JSON
 
-    @ManyToOne
-    private QuestionChoice questionChoice;
+    private String answer;
+
+    private int mark;
 }
