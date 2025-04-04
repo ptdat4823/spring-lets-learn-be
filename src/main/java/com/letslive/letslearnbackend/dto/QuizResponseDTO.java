@@ -14,7 +14,7 @@ import java.util.UUID;
 public class QuizResponseDTO {
     private UUID id;
     private UserDTO user; // no need when uploading
-    private String topicId;
+    private UUID topicId;
     private String status;
     private LocalDateTime startedAt;
     private LocalDateTime completedAt;
