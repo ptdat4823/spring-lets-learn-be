@@ -22,6 +22,7 @@ public class QuizResponseAnswer {
     @JoinColumn(name = "quiz_response_id")
     private QuizResponse quizResponse;
 
+    @Column(length = 1500)
     private String question; // hold the question data as JSON
 
     private String answer;
