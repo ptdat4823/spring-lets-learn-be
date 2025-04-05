@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -109,7 +110,8 @@ public class TopicService {
                     topicQuizRepository.save(topicQuiz);
 
                     // remove every questions and choices in topic quiz
-                    topicQuizQuestionRepository.findAllByTopicQuizId(topicQuiz.getId()).forEach(topicQuizQuestion -> {
+                    List<TopicQuizQuestion> topicQuizQuestions = topicQuizQuestionRepository.findAllByTopicQuizId(topicQuiz.getId());
+                    topicQuizQuestions.forEach(topicQuizQuestion -> {
                         topicQuizQuestion.getChoices().forEach(choice -> {
                             topicQuizQuestionChoiceRepository.deleteById(choice.getId());
                         });

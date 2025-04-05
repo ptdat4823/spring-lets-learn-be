@@ -43,12 +43,12 @@ public class QuizResponseController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<QuizResponseDTO> getQuizResponseById(@PathVariable("id") UUID resId, @PathVariable String topicId) {
+    public ResponseEntity<QuizResponseDTO> getQuizResponseById(@PathVariable("id") UUID resId) {
         return ResponseEntity.ok(quizResponseService.getQuizResponseById(resId));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<QuizResponseDTO> updateQuizResponseById(@PathVariable("id") UUID resId, @PathVariable String topicId) {
-        return ResponseEntity.ok(quizResponseService.update(resId));
+    public ResponseEntity<QuizResponseDTO> updateQuizResponseById(@PathVariable("id") UUID resId, @RequestBody QuizResponseDTO quizResponseDTO) {
+        return ResponseEntity.ok(quizResponseService.updateQuizResponseById(resId, quizResponseDTO));
     }
 }

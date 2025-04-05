@@ -25,7 +25,7 @@ public class QuizResponse {
     private User student;
 
     @Column(name = "topic_id")
-    private String topicId;
+    private UUID topicId;
 
     @Column(name = "status")
     private String status;
@@ -36,6 +36,6 @@ public class QuizResponse {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
-    @OneToMany(mappedBy = "quiz_response", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "quizResponse", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QuizResponseAnswer> answers;
 }
