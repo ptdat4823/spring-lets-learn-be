@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -18,10 +19,11 @@ import java.util.UUID;
 @Builder
 public class TopicAssigment {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @JsonProperty("id")
+    private UUID id;
 
-    @JsonIgnore
+    @JsonProperty("topicId")
     @Column(name = "topic_id")
     private UUID topicId;
 
@@ -36,4 +38,13 @@ public class TopicAssigment {
 
     @JsonProperty("maximumFileSize")
     private Number maximumFileSize;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinTable(
+            name = "assignment_response_files",
+            joinColumns = @JoinColumn(name = "assignment_response_id"),
+            inverseJoinColumns = @JoinColumn(name = "cloudinary_file_id")
+    )
+    @JsonProperty("cloudinaryFiles")
+    private List<CloudinaryFile> cloudinaryFiles;
 }

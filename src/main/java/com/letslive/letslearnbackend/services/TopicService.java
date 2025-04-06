@@ -92,7 +92,9 @@ public class TopicService {
     }
 
     public TopicDTO updateTopic(TopicDTO topicDTO) {
-        topicRepository.findById(topicDTO.getId()).orElseThrow(() -> new CustomException("No topic found!", HttpStatus.NOT_FOUND));
+        if (!topicRepository.existsById(topicDTO.getId())) {
+            throw new CustomException("No topic found!", HttpStatus.NOT_FOUND);
+        }
         Topic updatedTopic = topicRepository.save(TopicMapper.toEntity(topicDTO));
 
         // check if there is data, if not then just return
@@ -143,17 +145,18 @@ public class TopicService {
                 }
                 break;
             case "assigment":
-                //try {
-                //    TopicAssigment topicAssigment = mapper.readValue(topicDTO.getData(), TopicAssigment.class);
-                //    topicAssigment.setTopicId(createdTopic.getId());
-                //    TopicAssigment createdTopicAssigment = topicAssigmentRepository.save(topicAssigment);
-                //    createdTopicData = mapper.writeValueAsString(createdTopicAssigment);
-                //} catch (JsonProcessingException e) {
-                //    throw new CustomException("Error parsing assigment data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
-                //}
+                try {
+                    TopicAssigment topicAssigment = mapper.readValue(topicDTO.getData(), TopicAssigment.class);
+                    if (!topicAssigmentRepository.existsById(topicAssigment.getId())) {
+                        throw new CustomException("Assigment not found!", HttpStatus.NOT_FOUND);
+                    }
+                    TopicAssigment createdTopicAssigment = topicAssigmentRepository.save(topicAssigment);
+                    updatedTopicData = mapper.writeValueAsString(createdTopicAssigment);
+                } catch (JsonProcessingException e) {
+                    throw new CustomException("Error parsing assigment data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+                }
 
-                throw new CustomException("Not implemented yet!", HttpStatus.NOT_IMPLEMENTED);
-                //break;
+                break;
             default:
                 throw new CustomException("Topic type not found!", HttpStatus.BAD_REQUEST);
         }

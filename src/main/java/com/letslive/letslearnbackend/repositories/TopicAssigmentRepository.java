@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;
 
-public interface TopicAssigmentRepository extends JpaRepository<TopicAssigment, Long> {
+public interface TopicAssigmentRepository extends JpaRepository<TopicAssigment, UUID> {
     TopicAssigment findByTopicId(UUID topicId);
 }
