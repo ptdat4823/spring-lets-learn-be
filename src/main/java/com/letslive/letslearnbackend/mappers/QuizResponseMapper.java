@@ -12,7 +12,8 @@ public class QuizResponseMapper {
                 .status(quizResponseDTO.getStatus())
                 .topicId(quizResponseDTO.getTopicId())
                 .answers(quizResponseDTO.getAnswers().stream().map(QuizResponseAnswerMapper::toEntity).toList())
-                .startedAt(quizResponseDTO.getStartedAt());
+                .startedAt(quizResponseDTO.getStartedAt())
+                .student(UserMapper.mapToEntity(quizResponseDTO.getStudent()));
 
         return builder.build();
     }
@@ -24,7 +25,7 @@ public class QuizResponseMapper {
                 .status(quizResponse.getStatus())
                 .topicId(quizResponse.getTopicId())
                 .answers(quizResponse.getAnswers().stream().map(QuizResponseAnswerMapper::toDto).toList())
-                .user(UserMapper.mapToDTO(quizResponse.getStudent()));
+                .student(UserMapper.mapToDTO(quizResponse.getStudent()));
         return builder.build();
     }
 }

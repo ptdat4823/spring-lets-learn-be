@@ -26,11 +26,11 @@ public class QuizResponseController {
     private final QuizResponseService quizResponseService;
 
     @PostMapping()
-    public ResponseEntity<QuizResponseDTO> createQuizResponse(@RequestBody QuizResponseDTO dto, @PathVariable UUID topicId, HttpServletRequest request) {
+    public ResponseEntity<QuizResponseDTO> createQuizResponse(@RequestBody QuizResponseDTO dto, @PathVariable UUID topicId) {
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         UserDTO createdAndModifiedUser = new UserDTO();
         createdAndModifiedUser.setId(vo.getUserID());
-        dto.setUser(createdAndModifiedUser);
+        dto.setStudent(createdAndModifiedUser);
         dto.setTopicId(topicId);
 
         QuizResponseDTO res = quizResponseService.createQuizResponse(dto);
@@ -48,7 +48,8 @@ public class QuizResponseController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<QuizResponseDTO> updateQuizResponseById(@PathVariable("id") UUID resId, @RequestBody QuizResponseDTO quizResponseDTO) {
+    public ResponseEntity<QuizResponseDTO> updateQuizResponseById(@PathVariable("id") UUID resId, @PathVariable("topicId") UUID topicId, @RequestBody QuizResponseDTO quizResponseDTO) {
+        quizResponseDTO.setTopicId(topicId);
         return ResponseEntity.ok(quizResponseService.updateQuizResponseById(resId, quizResponseDTO));
     }
 }

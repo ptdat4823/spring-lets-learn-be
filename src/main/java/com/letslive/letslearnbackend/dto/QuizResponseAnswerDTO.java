@@ -11,6 +11,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class QuizResponseAnswerDTO {
     private UUID id;
+    private UUID quizResponseId; // no need for uploading
     private String question; // question data as JSON
     private String answer;
     private int mark;

@@ -18,9 +18,8 @@ public class QuizResponseAnswer {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "quiz_response_id")
-    private QuizResponse quizResponse;
+    @JoinColumn(name = "quiz_response_id", referencedColumnName = "id")
+    private UUID quizResponseId;
 
     @Column(length = 1500)
     private String question; // hold the question data as JSON

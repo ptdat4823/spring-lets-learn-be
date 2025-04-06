@@ -35,6 +35,8 @@ public class User {
     
     private String passwordHash;
 
+    private String avatar;
+
     @ColumnDefault("false")
     private Boolean isVerified;
     private String role;

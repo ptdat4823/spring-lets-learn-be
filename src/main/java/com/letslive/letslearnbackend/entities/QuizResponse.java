@@ -20,8 +20,8 @@ public class QuizResponse {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "student_id")
+    @ManyToOne()
+    @JoinColumn(name = "student_id", referencedColumnName = "id")
     private User student;
 
     @Column(name = "topic_id")
@@ -36,6 +36,6 @@ public class QuizResponse {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
-    @OneToMany(mappedBy = "quizResponse", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QuizResponseAnswer> answers;
 }
