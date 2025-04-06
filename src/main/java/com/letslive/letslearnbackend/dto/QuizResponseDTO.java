@@ -13,8 +13,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class QuizResponseDTO {
     private UUID id;
-    private UserDTO user; // no need when uploading
-    private UUID topicId;
+    private UserDTO student; // no need when uploading
+    private UUID topicId; // no need when uploading
     private String status;
     private LocalDateTime startedAt;
     private LocalDateTime completedAt;
