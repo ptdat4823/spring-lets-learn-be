@@ -21,6 +21,7 @@ public class QuizResponseMapper {
     public static QuizResponseDTO toDto(QuizResponse quizResponse) {
         QuizResponseDTO.QuizResponseDTOBuilder builder = QuizResponseDTO.builder();
         builder.id(quizResponse.getId())
+                .startedAt(quizResponse.getStartedAt())
                 .completedAt(quizResponse.getCompletedAt())
                 .status(quizResponse.getStatus())
                 .topicId(quizResponse.getTopicId())
