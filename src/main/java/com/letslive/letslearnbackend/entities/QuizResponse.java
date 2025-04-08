@@ -31,10 +31,10 @@ public class QuizResponse {
     private String status;
 
     @Column(name = "started_at")
-    private LocalDateTime startedAt;
+    private String startedAt;
 
     @Column(name = "completed_at")
-    private LocalDateTime completedAt;
+    private String completedAt;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QuizResponseAnswer> answers;
