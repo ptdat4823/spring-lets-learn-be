@@ -27,17 +27,23 @@ public class TopicAssigment {
     @Column(name = "topic_id")
     private UUID topicId;
 
+    @JsonProperty("description")
+    private String description;
+
+    @JsonProperty("open")
+    private String open;
+
+    @JsonProperty("close")
+    private String close;
+
     @JsonProperty("remindToGrade")
     private String remindToGrade;
-
-    @JsonProperty("wordLimit")
-    private Number wordLimit;
 
     @JsonProperty("maximumFile")
     private Number maximumFile;
 
     @JsonProperty("maximumFileSize")
-    private Number maximumFileSize;
+    private String maximumFileSize;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinTable(
