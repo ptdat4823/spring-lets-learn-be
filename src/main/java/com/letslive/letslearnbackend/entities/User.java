@@ -25,7 +25,7 @@ public class User {
 
     @Column(unique = true, nullable = false)
     @CreationTimestamp
-    private LocalDateTime createdAt;
+    private String createdAt;
     
     @Column(length = 20, nullable = false)
     private String username;

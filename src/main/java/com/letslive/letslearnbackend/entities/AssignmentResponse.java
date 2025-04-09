@@ -28,7 +28,7 @@ public class AssignmentResponse {
     private String topicId;
 
     @Column(name = "submitted_at")
-    private LocalDateTime submittedAt;
+    private String submittedAt;
 
     @Column(name = "answer")
     private String answer;

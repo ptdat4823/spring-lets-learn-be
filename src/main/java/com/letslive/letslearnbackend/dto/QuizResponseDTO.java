@@ -16,7 +16,7 @@ public class QuizResponseDTO {
     private UserDTO student; // no need when uploading
     private UUID topicId; // no need when uploading
     private String status;
-    private LocalDateTime startedAt;
-    private LocalDateTime completedAt;
+    private String startedAt;
+    private String completedAt;
     private List<QuizResponseAnswerDTO> answers;
 }
