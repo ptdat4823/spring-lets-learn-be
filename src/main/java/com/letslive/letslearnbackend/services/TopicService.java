@@ -26,6 +26,7 @@ public class TopicService {
     private final TopicQuizQuestionRepository topicQuizQuestionRepository;
     private final TopicQuizQuestionChoiceRepository topicQuizQuestionChoiceRepository;
     private final TopicAssigmentRepository topicAssigmentRepository;
+    private final TopicMeetingRepository topicMeetingRepository;
 
     ObjectMapper mapper = new ObjectMapper()
             .registerModule(new ParameterNamesModule())
@@ -63,7 +64,9 @@ public class TopicService {
                         });
                     });
 
-                    TopicQuiz finalTopicQuizSaved = topicQuizRepository.getById(createdTopicQuiz.getId());
+                    TopicQuiz finalTopicQuizSaved = topicQuizRepository
+                            .findById(createdTopicQuiz.getId())
+                            .orElseThrow(() -> new CustomException("Something unexpected happened!", HttpStatus.INTERNAL_SERVER_ERROR));
 
                     createdTopicData = mapper.writeValueAsString(finalTopicQuizSaved);
                 } catch (JsonProcessingException e) {
@@ -72,13 +75,24 @@ public class TopicService {
                 break;
             case "assignment":
                 try {
-                    TopicAssigment topicAssigment = mapper.readValue(topicDTO.getData(), TopicAssigment.class);
+                    TopicAssignment topicAssigment = mapper.readValue(topicDTO.getData(), TopicAssignment.class);
                     topicAssigment.setId(null);
                     topicAssigment.setTopicId(createdTopic.getId());
-                    TopicAssigment createdTopicAssigment = topicAssigmentRepository.save(topicAssigment);
+                    TopicAssignment createdTopicAssigment = topicAssigmentRepository.save(topicAssigment);
                     createdTopicData = mapper.writeValueAsString(createdTopicAssigment);
                 } catch (JsonProcessingException e) {
                     throw new CustomException("Error parsing assigment data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+                }
+                break;
+            case "meeting":
+                try {
+                    TopicMeeting topicMeeting = mapper.readValue(topicDTO.getData(), TopicMeeting.class);
+                    topicMeeting.setId(null);
+                    topicMeeting.setTopicId(createdTopic.getId());
+                    TopicMeeting createdTopicMeeting = topicMeetingRepository.save(topicMeeting);
+                    createdTopicData = mapper.writeValueAsString(createdTopicMeeting);
+                } catch (JsonProcessingException e) {
+                    throw new CustomException("Error parsing meeting data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
                 }
                 break;
             default:
@@ -101,7 +115,8 @@ public class TopicService {
         if (topicDTO.getData() == null || topicDTO.getData().isEmpty()) {
             return TopicMapper.toDTO(updatedTopic);
         }
-        String updatedTopicData;
+
+        TopicDTO updatedTopicDTO = TopicMapper.toDTO(updatedTopic);
 
         switch (topicDTO.getType().toLowerCase()) {
             case "quiz":
@@ -137,7 +152,7 @@ public class TopicService {
                     // BUG: RETURNING OLD DATA
                     topicQuizRepository.flush();
                     TopicQuiz updatedTopicQuizData = topicQuizRepository.findById(topicQuiz.getId()).orElseThrow(() -> new CustomException("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR));
-                    updatedTopicData = mapper.writeValueAsString(updatedTopicQuizData);
+                    updatedTopicDTO.setData(mapper.writeValueAsString(updatedTopicQuizData));
                 } catch (JsonProcessingException e) {
                     throw new CustomException("Error parsing quiz data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
                 } catch (Exception e) {
@@ -146,23 +161,33 @@ public class TopicService {
                 break;
             case "assignment":
                 try {
-                    TopicAssigment topicAssigment = mapper.readValue(topicDTO.getData(), TopicAssigment.class);
+                    TopicAssignment topicAssigment = mapper.readValue(topicDTO.getData(), TopicAssignment.class);
                     if (!topicAssigmentRepository.existsById(topicAssigment.getId())) {
                         throw new CustomException("Assigment not found!", HttpStatus.NOT_FOUND);
                     }
-                    TopicAssigment createdTopicAssigment = topicAssigmentRepository.save(topicAssigment);
-                    updatedTopicData = mapper.writeValueAsString(createdTopicAssigment);
+                    TopicAssignment createdTopicAssigment = topicAssigmentRepository.save(topicAssigment);
+                    updatedTopicDTO.setData(mapper.writeValueAsString(createdTopicAssigment));
                 } catch (JsonProcessingException e) {
                     throw new CustomException("Error parsing assigment data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
                 }
 
                 break;
+            case "meeting":
+                try {
+                    TopicMeeting topicMeeting = mapper.readValue(topicDTO.getData(), TopicMeeting.class);
+                    if (!topicMeetingRepository.existsById(topicMeeting.getId())) {
+                        throw new CustomException("Assigment not found!", HttpStatus.NOT_FOUND);
+                    }
+                    TopicMeeting updatedTopicMeeting = topicMeetingRepository.save(topicMeeting);
+                    updatedTopicDTO.setData(mapper.writeValueAsString(updatedTopicMeeting));
+                } catch (JsonProcessingException e) {
+                    throw new CustomException("Error parsing meeting data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+                }
+                break;
             default:
                 throw new CustomException("Topic type not found!", HttpStatus.BAD_REQUEST);
         }
 
-        TopicDTO updatedTopicDTO = TopicMapper.toDTO(updatedTopic);
-        updatedTopicDTO.setData(updatedTopicData);
         return updatedTopicDTO;
     }
 
@@ -184,11 +209,19 @@ public class TopicService {
                 }
                 break;
             case "assignment":
-                TopicAssigment topicAssigment = topicAssigmentRepository.findByTopicId(topic.getId());
+                TopicAssignment topicAssignment = topicAssigmentRepository.findByTopicId(topic.getId());
                 try {
-                    topicData = mapper.writeValueAsString(topicAssigment);
+                    topicData = mapper.writeValueAsString(topicAssignment);
                 } catch (JsonProcessingException e) {
                     throw new CustomException("Error parsing assigment data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+                }
+                break;
+            case "meeting":
+                TopicMeeting topicMeeting = topicMeetingRepository.findById(topic.getId()).orElseThrow(() -> new CustomException("No topic meeting found!", HttpStatus.NOT_FOUND));
+                try {
+                    topicData = mapper.writeValueAsString(topicMeeting);
+                } catch (JsonProcessingException e) {
+                    throw new CustomException("Error parsing meeting data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
                 }
                 break;
             default:

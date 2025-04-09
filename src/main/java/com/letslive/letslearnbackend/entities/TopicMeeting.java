@@ -1,5 +1,6 @@
 package com.letslive.letslearnbackend.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -31,6 +32,6 @@ public class TopicMeeting {
     @JsonProperty("open")
     private String open;
 
-    @JsonProperty("close")
+    @JsonIgnore()
     private String close;
 }

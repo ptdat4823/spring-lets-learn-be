@@ -1,7 +1,6 @@
 
 package com.letslive.letslearnbackend.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
         import lombok.AllArgsConstructor;
@@ -9,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,7 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Data
 @Builder
-public class TopicAssigment {
+public class TopicAssignment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @JsonProperty("id")
@@ -33,8 +33,14 @@ public class TopicAssigment {
     @JsonProperty("open")
     private String open;
 
-    @JsonProperty("close")
+    @JsonProperty(value = "close", required = false)
     private String close;
+
+    @JsonProperty(value = "note", required = false)
+    private String note;
+
+    @JsonProperty("mark")
+    private BigDecimal mark;
 
     @JsonProperty("remindToGrade")
     private String remindToGrade;
