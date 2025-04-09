@@ -70,7 +70,7 @@ public class TopicService {
                     throw new CustomException("Error parsing quiz data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
                 }
                 break;
-            case "assigment":
+            case "assignment":
                 try {
                     TopicAssigment topicAssigment = mapper.readValue(topicDTO.getData(), TopicAssigment.class);
                     topicAssigment.setId(null);
@@ -144,7 +144,7 @@ public class TopicService {
                     throw new CustomException("Something went wrong: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
                 }
                 break;
-            case "assigment":
+            case "assignment":
                 try {
                     TopicAssigment topicAssigment = mapper.readValue(topicDTO.getData(), TopicAssigment.class);
                     if (!topicAssigmentRepository.existsById(topicAssigment.getId())) {
@@ -183,7 +183,7 @@ public class TopicService {
                     throw new CustomException("Error parsing quiz data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
                 }
                 break;
-            case "assigment":
+            case "assignment":
                 TopicAssigment topicAssigment = topicAssigmentRepository.findByTopicId(topic.getId());
                 try {
                     topicData = mapper.writeValueAsString(topicAssigment);
