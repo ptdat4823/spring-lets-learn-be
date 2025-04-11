@@ -57,4 +57,12 @@ public class CourseController {
         CourseDTO updatedCourse = courseService.updateCourse(id, courseDTO);
         return new ResponseEntity<>(updatedCourse, HttpStatus.OK);
     }
+
+    @PatchMapping(value = "/{id}/join")
+    public ResponseEntity<Void> joinCourse(@PathVariable UUID id) {
+        JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        UserDTO user = userService.findUserById(vo.getUserID());
+        courseService.addUserToCourse(id, user.getId());
+        return ResponseEntity.noContent().build();
+    }
 }

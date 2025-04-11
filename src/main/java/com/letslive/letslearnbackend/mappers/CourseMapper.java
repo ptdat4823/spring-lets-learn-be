@@ -16,7 +16,7 @@ public class CourseMapper {
                 .isPublished(course.getIsPublished());
 
         if (course.getSections() != null) {
-            builder.sections(course.getSections().stream().map(section -> SectionMapper.mapToDTO(section)).toList());
+            builder.sections(course.getSections().stream().map(SectionMapper::mapToDTO).toList());
         }
 
         if (course.getCreator() != null) {

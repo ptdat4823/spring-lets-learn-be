@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -31,4 +32,6 @@ public class UserDTO {
     private String role;
 
     private String isVerified;
+
+    private List<CourseDTO> courses;
 }

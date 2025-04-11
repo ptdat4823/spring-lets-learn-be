@@ -7,9 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "courses")
@@ -37,4 +35,7 @@ public class Course {
     @OneToMany
     @JoinColumn(name = "course_id", referencedColumnName = "id")
     private List<Section> sections;
+
+    @ManyToMany(mappedBy = "courses")
+    private Set<User> students = new HashSet<>(); 
 }

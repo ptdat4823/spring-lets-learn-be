@@ -9,5 +9,6 @@ import java.util.UUID;
 
 public interface QuizResponseRepository extends JpaRepository<QuizResponse, UUID> {
     List<QuizResponse> findAllByTopicId(UUID quizId);
+    List<QuizResponse> findAllByStudentId(UUID quizId);
 }
 

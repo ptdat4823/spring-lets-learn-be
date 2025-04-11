@@ -15,11 +15,17 @@ public class UserMapper {
     }
 
     public static UserDTO mapToDTO(User user) {
-        return UserDTO.builder()
+        UserDTO.UserDTOBuilder builder = UserDTO.builder();
+        builder
                 .id(user.getId())
                 .email(user.getEmail())
                 .username(user.getUsername())
-                .role(user.getRole())
-                .build();
+                .role(user.getRole());
+
+        if (user.getCourses() != null) {
+            builder.courses(user.getCourses().stream().map(CourseMapper::mapToDTO).toList());
+        }
+
+        return builder.build();
     }
 }

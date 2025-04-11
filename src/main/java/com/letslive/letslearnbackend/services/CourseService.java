@@ -9,10 +9,7 @@ import com.letslive.letslearnbackend.repositories.CourseRepository;
 import com.letslive.letslearnbackend.repositories.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -59,5 +56,17 @@ public class CourseService {
 
         Course updatedCourse = courseRepository.save(course);
         return CourseMapper.mapToDTO(updatedCourse);
+    }
+
+    public void addUserToCourse(UUID id, UUID userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
+        Course course = courseRepository.findById(id).orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
+
+        if (course.getStudents().stream().anyMatch((student) -> student.getId().equals(userId))) {
+            throw new CustomException("User already has this course", HttpStatus.CONFLICT);
+        };
+
+        course.getStudents().add(user);
+        courseRepository.save(course);
     }
 }
