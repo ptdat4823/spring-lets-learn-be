@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -25,13 +26,23 @@ public class AssignmentResponse {
     private User student;
 
     @Column(name = "topic_id")
-    private String topicId;
+    private UUID topicId;
 
     @Column(name = "submitted_at")
     private String submittedAt;
 
-    @Column(name = "answer")
-    private String answer;
+    @Column(name = "note")
+    private String note;
+
+    @Column(name = "mark")
+    private BigDecimal mark;
+
+    @Column(name = "graded_at")
+    private String gradedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "graded_by")
+    private User gradedBy;
 
     @OneToMany
     @JoinTable(
