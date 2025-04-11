@@ -21,7 +21,7 @@ public class AssignmentResponseController {
     private final AssignmentResponseService assignmentResponseService;
 
     @PostMapping()
-    public ResponseEntity<AssignmentResponseDTO> createQuizResponse(@RequestBody AssignmentResponseDTO dto, @PathVariable UUID topicId) {
+    public ResponseEntity<AssignmentResponseDTO> createAssignmentResponse(@RequestBody AssignmentResponseDTO dto, @PathVariable UUID topicId) {
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         UserDTO createdAndModifiedUser = new UserDTO();
         createdAndModifiedUser.setId(vo.getUserID());

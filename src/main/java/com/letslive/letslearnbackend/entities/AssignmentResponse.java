@@ -16,6 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Table(name = "assignment_response")
 public class AssignmentResponse {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -44,11 +45,18 @@ public class AssignmentResponse {
     @JoinColumn(name = "graded_by")
     private User gradedBy;
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(
             name = "assignment_response_files",
-            joinColumns = @JoinColumn(name = "assignment_response_id"),
-            inverseJoinColumns = @JoinColumn(name = "cloudinary_file_id")
+            joinColumns = @JoinColumn(
+                    name = "assignment_response_id",
+                    table = "assignment_response",
+                    referencedColumnName = "id"
+            ),
+            inverseJoinColumns = @JoinColumn(
+                    name = "cloudinary_file_id",
+                    referencedColumnName = "id"
+            )
     )
     private List<CloudinaryFile> cloudinaryFiles;
 }

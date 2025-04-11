@@ -17,6 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Data
 @Builder
+@Table(name = "topic_assignment")
 public class TopicAssignment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -45,11 +46,23 @@ public class TopicAssignment {
     @JsonProperty("maximumFileSize")
     private String maximumFileSize;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+//    @JoinTable(
+//            name = "topic_assignment_files",
+//            joinColumns = @JoinColumn(name = "topic_assignment_id"),
+//            inverseJoinColumns = @JoinColumn(name = "cloudinary_file_id")
+//    )
+    @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(
-            name = "assignment_response_files",
-            joinColumns = @JoinColumn(name = "assignment_response_id"),
-            inverseJoinColumns = @JoinColumn(name = "cloudinary_file_id")
+            name = "topic_assignment_files",
+            joinColumns = @JoinColumn(
+                    name = "topic_assignment_id",
+                    table = "topic_assignment",
+                    referencedColumnName = "id"
+            ),
+            inverseJoinColumns = @JoinColumn(
+                    name = "cloudinary_file_id",
+                    referencedColumnName = "id"
+            )
     )
     @JsonProperty("cloudinaryFiles")
     private List<CloudinaryFile> cloudinaryFiles;

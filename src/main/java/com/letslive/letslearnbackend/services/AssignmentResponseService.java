@@ -2,9 +2,11 @@ package com.letslive.letslearnbackend.services;
 
 import com.letslive.letslearnbackend.dto.AssignmentResponseDTO;
 import com.letslive.letslearnbackend.entities.AssignmentResponse;
+import com.letslive.letslearnbackend.entities.CloudinaryFile;
 import com.letslive.letslearnbackend.exception.CustomException;
 import com.letslive.letslearnbackend.mappers.AssignmentResponseMapper;
 import com.letslive.letslearnbackend.repositories.AssignmentResponseRepository;
+import com.letslive.letslearnbackend.repositories.CloudinaryFileRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class AssignmentResponseService {
     private final AssignmentResponseRepository assignmentResponseRepository;
+    private final CloudinaryFileRepository cloudinaryFileRepository;
 
     public AssignmentResponseDTO getAssignmentResponseById(UUID id) {
         AssignmentResponse res = assignmentResponseRepository.findById(id).orElseThrow(() -> new CustomException("Assignment response not found", HttpStatus.NOT_FOUND));
@@ -25,7 +28,15 @@ public class AssignmentResponseService {
 
     public AssignmentResponseDTO createAssignmentResponse(AssignmentResponseDTO quizResponseDTO) {
         AssignmentResponse assignmentResponse = AssignmentResponseMapper.toEntity(quizResponseDTO);
-        AssignmentResponse savedAssignmentResponse = assignmentResponseRepository.save(assignmentResponse);
+
+        List<CloudinaryFile> savedFiles = cloudinaryFileRepository.saveAll(assignmentResponse.getCloudinaryFiles());
+
+        assignmentResponse.setCloudinaryFiles(null);
+        AssignmentResponse firstCreated = assignmentResponseRepository.save(assignmentResponse);
+
+        firstCreated.setCloudinaryFiles(savedFiles);
+        AssignmentResponse savedAssignmentResponse = assignmentResponseRepository.save(firstCreated);
+
         return AssignmentResponseMapper.toDTO(savedAssignmentResponse);
     }
 

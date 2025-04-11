@@ -13,9 +13,12 @@ public class AssignmentResponseMapper {
                 .submittedAt(assignmentResponse.getSubmittedAt())
                 .note(assignmentResponse.getNote())
                 .mark(assignmentResponse.getMark())
-                .gradedAt(assignmentResponse.getGradedAt())
-                .gradedBy(UserMapper.mapToDTO(assignmentResponse.getGradedBy()))
-                .cloudinaryFiles(assignmentResponse.getCloudinaryFiles());
+                .cloudinaryFiles(assignmentResponse.getCloudinaryFiles())
+                .gradedAt(assignmentResponse.getGradedAt());
+
+        if (assignmentResponse.getGradedBy() != null) {
+            builder.gradedBy(UserMapper.mapToDTO(assignmentResponse.getGradedBy()));
+        }
 
         return builder.build();
     }
@@ -29,8 +32,8 @@ public class AssignmentResponseMapper {
                 .submittedAt(assignmentResponseDTO.getSubmittedAt())
                 .note(assignmentResponseDTO.getNote())
                 .mark(assignmentResponseDTO.getMark())
-                .gradedAt(assignmentResponseDTO.getGradedAt())
-                .cloudinaryFiles(assignmentResponseDTO.getCloudinaryFiles());
+                .cloudinaryFiles(assignmentResponseDTO.getCloudinaryFiles())
+                .gradedAt(assignmentResponseDTO.getGradedAt());
 
         if (assignmentResponseDTO.getGradedBy() != null) {
             builder.gradedBy(UserMapper.mapToEntity(assignmentResponseDTO.getGradedBy()));
