@@ -27,4 +27,5 @@ public class CourseDTO {
     private Boolean isPublished = false;
     private UserDTO creator;
     private List<SectionDTO> sections;
+    private List<UserDTO> students;
 }

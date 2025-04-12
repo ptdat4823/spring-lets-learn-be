@@ -23,6 +23,12 @@ public class CourseMapper {
                 builder.creator(UserMapper.mapToDTO(course.getCreator()));
         }
 
+        if (course.getStudents() != null) {
+            // avoid stackoverflow
+            course.getStudents().forEach(student -> student.setCourses(null));
+            builder.students(course.getStudents().stream().map(UserMapper::mapToDTO).toList());
+        }
+
         return builder.build();
     }
 

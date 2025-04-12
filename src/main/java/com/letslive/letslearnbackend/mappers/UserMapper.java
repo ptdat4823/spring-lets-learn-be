@@ -23,6 +23,8 @@ public class UserMapper {
                 .role(user.getRole());
 
         if (user.getCourses() != null) {
+            // avoid stackoverflow
+            user.getCourses().forEach(course -> course.setStudents(null));
             builder.courses(user.getCourses().stream().map(CourseMapper::mapToDTO).toList());
         }
 

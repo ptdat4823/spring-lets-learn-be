@@ -25,7 +25,7 @@ public class CourseService {
                 .findById(userID)
                 .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
 
-        return courseRepository.findByCreatorId(userID).stream().map((c) -> CourseMapper.mapToDTO(c)).toList();
+        return courseRepository.findByCreatorId(userID).stream().map(CourseMapper::mapToDTO).toList();
     }
 
     public CourseDTO getCourse(UUID id) {
@@ -66,7 +66,10 @@ public class CourseService {
             throw new CustomException("User already has this course", HttpStatus.CONFLICT);
         };
 
+        user.getCourses().add(course);
         course.getStudents().add(user);
+
         courseRepository.save(course);
+        userRepository.save(user);
     }
 }

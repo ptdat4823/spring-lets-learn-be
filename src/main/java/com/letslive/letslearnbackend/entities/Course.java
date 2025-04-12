@@ -1,20 +1,22 @@
 package com.letslive.letslearnbackend.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.*;
 
 @Entity
 @Table(name = "courses")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString(exclude = "users")
 public class Course {
     @Id
     @GeneratedValue(generator = "UUID")
@@ -37,5 +39,6 @@ public class Course {
     private List<Section> sections;
 
     @ManyToMany(mappedBy = "courses")
-    private Set<User> students = new HashSet<>(); 
+    @JsonIgnore
+    private List<User> students = new ArrayList<>();
 }
