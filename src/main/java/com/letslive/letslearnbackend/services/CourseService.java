@@ -36,6 +36,11 @@ public class CourseService {
         return CourseMapper.mapToDTO(course);
     }
 
+    public List<CourseDTO> getAllPublicCourses() {
+        List<Course> courses = courseRepository.findAllByIsPublishedTrue();
+        return courses.stream().map(CourseMapper::mapToDTO).toList();
+    }
+
     public CourseDTO createCourse(User creator, CourseDTO courseDTO) {
         Course course = CourseMapper.mapToEntity(courseDTO);
         course.setCreator(creator);

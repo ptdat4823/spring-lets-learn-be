@@ -13,6 +13,7 @@ import com.letslive.letslearnbackend.security.JwtTokenVo;
 import com.letslive.letslearnbackend.security.SecurityUtils;
 import com.letslive.letslearnbackend.services.CourseService;
 import com.letslive.letslearnbackend.services.UserService;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -32,10 +33,15 @@ public class CourseController {
     private final UserService userService;
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<CourseDTO>> getCoursesByUserID(@RequestParam UUID userId) {
-        userService.findUserById(userId); // check if user exists
-        List<CourseDTO> courses = courseService.getAllCoursesByUserID(userId);
-        return new ResponseEntity<>(courses, HttpStatus.OK);
+    public ResponseEntity<List<CourseDTO>> getCoursesByUserID(@RequestParam(required = false) UUID userId) {
+        if (userId != null) {
+            List<CourseDTO> courses = courseService.getAllCoursesByUserID(userId);
+            return new ResponseEntity<>(courses, HttpStatus.OK);
+        } else {
+            courseService.getAllPublicCourses();
+            List<CourseDTO> courses = courseService.getAllPublicCourses();
+            return new ResponseEntity<>(courses, HttpStatus.OK);
+        }
     }
 
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
