@@ -1,12 +1,14 @@
 package com.letslive.letslearnbackend.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
@@ -18,7 +20,7 @@ import java.util.UUID;
 public class CloudinaryFile {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  @JsonIgnore
+  @JsonProperty(required = false)
   private UUID id;
 
   @JsonProperty("name")
