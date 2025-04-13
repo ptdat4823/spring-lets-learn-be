@@ -62,6 +62,21 @@ public class SecurityUtils {
         return createToken(jwtTokenVo, true);
     }
 
+    public static void removeAllTokens(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals(ACCESS_TOKEN_AUTHORIZATION_HEADER) || cookie.getName().equals(REFRESH_TOKEN_AUTHORIZATION_HEADER)) {
+                    cookie.setValue(null);
+                    cookie.setMaxAge(0);
+                    cookie.setPath("/");
+                    cookie.setHttpOnly(true);
+                    return;
+                }
+            }
+        }
+    }
+
     public static JwtTokenVo GetJwtTokenVoFromPrinciple(Object obj) {
         if (obj instanceof JwtTokenVo) {
             return (JwtTokenVo) obj;

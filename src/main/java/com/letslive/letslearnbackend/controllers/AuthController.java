@@ -40,4 +40,10 @@ public class AuthController {
         refreshTokenService.refreshToken(request);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
+        SecurityUtils.removeAllTokens(request);
+        return ResponseEntity.noContent().build();
+    }
 }
