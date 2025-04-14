@@ -45,7 +45,7 @@ public class AssignmentResponseService {
     }
 
     public AssignmentResponseDTO updateAssignmentResponseById(UUID id, AssignmentResponseDTO quizResponseDTO) {
-        if (assignmentResponseRepository.existsById(id)) {
+        if (!assignmentResponseRepository.existsById(id)) {
             throw new CustomException("Assignment response not found", HttpStatus.NOT_FOUND);
         }
 
