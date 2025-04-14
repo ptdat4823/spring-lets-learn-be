@@ -54,4 +54,15 @@ public class AssignmentResponseService {
         AssignmentResponse savedAssignmentResponse = assignmentResponseRepository.save(assignmentResponse);
         return AssignmentResponseMapper.toDTO(savedAssignmentResponse);
     }
+
+    public void deleteResponse(UUID responseId) {
+        AssignmentResponse assignmentResponse = assignmentResponseRepository
+                .findById(responseId)
+                .orElseThrow(() -> new CustomException("Assignment response not found", HttpStatus.NOT_FOUND));
+
+        cloudinaryFileRepository.deleteAll(assignmentResponse.getCloudinaryFiles());
+        assignmentResponse.setCloudinaryFiles(null);
+
+        assignmentResponseRepository.delete(assignmentResponse);
+    }
 }

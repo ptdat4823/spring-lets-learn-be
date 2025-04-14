@@ -33,18 +33,24 @@ public class AssignmentResponseController {
     }
 
     @GetMapping()
-    public ResponseEntity<List<AssignmentResponseDTO>> getAllQuizResponsesByTopicId(@PathVariable UUID topicId) {
+    public ResponseEntity<List<AssignmentResponseDTO>> getAllAssignmentResponsesByTopicId(@PathVariable UUID topicId) {
         return ResponseEntity.ok(assignmentResponseService.getAllAssignmentResponsesByTopicId(topicId));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AssignmentResponseDTO> getQuizResponseById(@PathVariable("id") UUID resId) {
+    public ResponseEntity<AssignmentResponseDTO> getAssignmentResponseById(@PathVariable("id") UUID resId) {
         return ResponseEntity.ok(assignmentResponseService.getAssignmentResponseById(resId));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AssignmentResponseDTO> updateQuizResponseById(@PathVariable("id") UUID resId, @PathVariable("topicId") UUID topicId, @RequestBody AssignmentResponseDTO assignmentResponseDTO) {
+    public ResponseEntity<AssignmentResponseDTO> updateAssignmentResponseById(@PathVariable("id") UUID resId, @PathVariable("topicId") UUID topicId, @RequestBody AssignmentResponseDTO assignmentResponseDTO) {
         assignmentResponseDTO.setTopicId(topicId);
         return ResponseEntity.ok(assignmentResponseService.updateAssignmentResponseById(resId, assignmentResponseDTO));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAssignmentResponseById(@PathVariable("id") UUID resId) {
+        assignmentResponseService.deleteResponse(resId);
+        return ResponseEntity.noContent().build();
     }
 }
