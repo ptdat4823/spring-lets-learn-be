@@ -4,12 +4,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.session.SessionManagementFilter;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
@@ -27,6 +25,7 @@ public class SecurityConfig {
                     a.requestMatchers("/section/**").authenticated();
                     a.requestMatchers("/topic/**").authenticated();
                     a.requestMatchers("/question/**").authenticated();
+                    a.requestMatchers("/auth/logout").permitAll();
                     a.anyRequest().permitAll();
                 })
                 .addFilterAfter(jwtAuthFilter, SessionManagementFilter.class)

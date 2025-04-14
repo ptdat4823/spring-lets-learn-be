@@ -64,6 +64,9 @@ public class SecurityUtils {
 
     public static void removeAllTokens(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
+        var attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        assert attributes != null;
+
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if (cookie.getName().equals(ACCESS_TOKEN_AUTHORIZATION_HEADER) || cookie.getName().equals(REFRESH_TOKEN_AUTHORIZATION_HEADER)) {
@@ -71,10 +74,11 @@ public class SecurityUtils {
                     cookie.setMaxAge(0);
                     cookie.setPath("/");
                     cookie.setHttpOnly(true);
-                    return;
+                    attributes.getResponse().addCookie(cookie);
                 }
             }
         }
+
     }
 
     public static JwtTokenVo GetJwtTokenVoFromPrinciple(Object obj) {
