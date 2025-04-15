@@ -13,5 +13,6 @@ public class TopicDTO {
     private String title;
     private String type;
     private String data;
+    private String response;
 }
 

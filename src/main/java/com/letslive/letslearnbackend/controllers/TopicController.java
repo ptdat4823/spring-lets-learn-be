@@ -1,22 +1,14 @@
 package com.letslive.letslearnbackend.controllers;
 
-import com.letslive.letslearnbackend.dto.SectionDTO;
 import com.letslive.letslearnbackend.dto.TopicDTO;
-import com.letslive.letslearnbackend.entities.Topic;
-import com.letslive.letslearnbackend.exception.CustomException;
-import com.letslive.letslearnbackend.mappers.TopicMapper;
-import com.letslive.letslearnbackend.repositories.TopicRepository;
-import com.letslive.letslearnbackend.services.SectionService;
+import com.letslive.letslearnbackend.security.JwtTokenVo;
+import com.letslive.letslearnbackend.security.SecurityUtils;
 import com.letslive.letslearnbackend.services.TopicService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -53,7 +45,8 @@ public class TopicController {
 
     @GetMapping("/{id}")
     public ResponseEntity<TopicDTO> getTopicById(@PathVariable UUID id) {
-        TopicDTO topicDTO = topicService.getTopicById(id);
+        JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        TopicDTO topicDTO = topicService.getTopicById(id, vo.getUserID());
         return ResponseEntity.ok(topicDTO);
     }
 }

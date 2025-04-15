@@ -11,7 +11,6 @@ import com.letslive.letslearnbackend.exception.CustomException;
 import com.letslive.letslearnbackend.mappers.TopicMapper;
 import com.letslive.letslearnbackend.repositories.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +26,8 @@ public class TopicService {
     private final TopicQuizQuestionChoiceRepository topicQuizQuestionChoiceRepository;
     private final TopicAssigmentRepository topicAssigmentRepository;
     private final TopicMeetingRepository topicMeetingRepository;
+    private final QuizResponseRepository quizResponseRepository;
+    private final AssignmentResponseRepository assignmentResponseRepository;
 
     ObjectMapper mapper = new ObjectMapper()
             .registerModule(new ParameterNamesModule())
@@ -195,15 +196,17 @@ public class TopicService {
         topicRepository.deleteById(id);
     }
 
-    public TopicDTO getTopicById(UUID id) {
+    public TopicDTO getTopicById(UUID id, UUID userId) {
         Topic topic = topicRepository.findById(id).orElseThrow(() -> new CustomException("No topic found!", HttpStatus.NOT_FOUND));
         String topicData;
+        String studentResponseData = null;
 
         switch (topic.getType()) {
             case "quiz":
                 TopicQuiz topicQuiz = topicQuizRepository.findByTopicId(topic.getId());
                 try {
                     topicData = mapper.writeValueAsString(topicQuiz);
+                    studentResponseData = mapper.writeValueAsString(quizResponseRepository.findByTopicIdAndStudentId(topicQuiz.getId(), userId));
                 } catch (JsonProcessingException e) {
                     throw new CustomException("Error parsing quiz data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
                 }
@@ -212,6 +215,7 @@ public class TopicService {
                 TopicAssignment topicAssignment = topicAssigmentRepository.findByTopicId(topic.getId());
                 try {
                     topicData = mapper.writeValueAsString(topicAssignment);
+                    studentResponseData = mapper.writeValueAsString(assignmentResponseRepository.findByTopicIdAndStudentId(topicAssignment.getTopicId(), userId));
                 } catch (JsonProcessingException e) {
                     throw new CustomException("Error parsing assigment data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
                 }
@@ -230,6 +234,7 @@ public class TopicService {
 
         TopicDTO createdTopicDTO = TopicMapper.toDTO(topic);
         createdTopicDTO.setData(topicData);
+        createdTopicDTO.setResponse(studentResponseData);
 
         return createdTopicDTO;
     }
