@@ -42,6 +42,11 @@ public class CourseController {
         return new ResponseEntity<>(course, HttpStatus.OK);
     }
 
+    @GetMapping(value = "/{id}/work", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<String>> getWorksOfCourse(@PathVariable UUID id, @RequestParam(required = false) String type) {
+        return ResponseEntity.ok(courseService.getAllWorksOfCourse(id, type));
+    }
+
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CourseDTO> createCourse(@RequestBody CourseDTO courseDTO) {
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());

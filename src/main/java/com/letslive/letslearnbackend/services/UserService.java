@@ -75,7 +75,7 @@ public class UserService {
         return result;
     }
 
-    public List<StudentWorksInACourseDTO> getAllWorksOfUser(UUID userId, String type) {
+    public List<StudentWorksInACourseDTO> getAllWorksOfUser(UUID userId, String type, UUID courseId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
         List<StudentWorksInACourseDTO> result = new ArrayList<>();
@@ -127,10 +127,12 @@ public class UserService {
                 });
             });
 
-            result.add(new StudentWorksInACourseDTO(
-                    CourseMapper.mapToDTO(course),
-                    works
-            ));
+            if (!works.isEmpty()) {
+                result.add(new StudentWorksInACourseDTO(
+                        CourseMapper.mapToDTO(course),
+                        works
+                ));
+            }
         });
 
         return result;

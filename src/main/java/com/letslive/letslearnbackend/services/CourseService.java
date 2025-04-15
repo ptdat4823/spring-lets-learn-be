@@ -1,16 +1,18 @@
 package com.letslive.letslearnbackend.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.letslive.letslearnbackend.dto.CourseDTO;
 import com.letslive.letslearnbackend.entities.Course;
 import com.letslive.letslearnbackend.entities.User;
 import com.letslive.letslearnbackend.exception.CustomException;
 import com.letslive.letslearnbackend.mappers.CourseMapper;
-import com.letslive.letslearnbackend.repositories.CourseRepository;
-import com.letslive.letslearnbackend.repositories.UserRepository;
+import com.letslive.letslearnbackend.repositories.*;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,6 +21,10 @@ import java.util.UUID;
 public class CourseService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
+    private final TopicQuizRepository topicQuizRepository;
+    private final ObjectMapper mapper = new ObjectMapper();
+    private final TopicAssigmentRepository topicAssigmentRepository;
+    private final TopicMeetingRepository topicMeetingRepository;
 
     public List<CourseDTO> getAllCoursesByUserID(UUID userID) {
         userRepository
@@ -76,5 +82,56 @@ public class CourseService {
 
         courseRepository.save(course);
         userRepository.save(user);
+    }
+
+    public List<String> getAllWorksOfCourse(UUID courseId, String type) {
+        Course course = courseRepository.findById(courseId).orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
+        List<String> result = new ArrayList<>();
+
+        course.getSections().forEach(courseSection -> {
+            courseSection.getTopics().forEach(topicSection -> {
+                if (type == null || type.isEmpty() || type.equals(topicSection.getType())) {
+                    switch (topicSection.getType()) {
+                        case "quiz":
+                            if (type == null || type.equals("quiz")) {
+                                topicQuizRepository.findByTopicId(topicSection.getId()).ifPresent(topicQuiz -> {
+                                    try {
+                                        result.add(mapper.writeValueAsString(topicQuiz));
+                                    } catch (JsonProcessingException e) {
+                                        throw new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR);
+                                    }
+                                });
+                            }
+                            break;
+                        case "assignment":
+                            if (type == null || type.equals("assignment")) {
+                                topicAssigmentRepository.findByTopicId(topicSection.getId()).ifPresent(topicAssignment -> {
+                                    try {
+                                        result.add(mapper.writeValueAsString(topicAssignment));
+                                    } catch (JsonProcessingException e) {
+                                        throw new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR);
+                                    }
+                                });
+                            }
+                            break;
+                        case "meeting":
+                            if (type == null || type.equals("meeting")) {
+                                topicMeetingRepository.findByTopicId(topicSection.getId()).ifPresent(topicMeeting -> {
+                                    try {
+                                        result.add(mapper.writeValueAsString(topicMeeting));
+                                    } catch (JsonProcessingException e) {
+                                        throw new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR);
+                                    }
+                                });
+                            }
+                            break;
+                        default:
+                            throw new CustomException("Type not found, something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+                }
+            });
+        });
+
+        return result;
     }
 }

@@ -24,9 +24,9 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/work")
-    public ResponseEntity<List<StudentWorksInACourseDTO>> getAllWorksOfUser(@RequestParam String type) {
+    public ResponseEntity<List<StudentWorksInACourseDTO>> getAllWorksOfUser(@RequestParam(required = false) String type, @RequestParam(required = false) UUID courseId) {
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-        return ResponseEntity.ok(userService.getAllWorksOfUser(vo.getUserID(), type));
+        return ResponseEntity.ok(userService.getAllWorksOfUser(vo.getUserID(), type, courseId));
     }
 
     @GetMapping(value = "/me", produces = MediaType.APPLICATION_JSON_VALUE)
