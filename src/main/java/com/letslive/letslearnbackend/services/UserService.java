@@ -3,18 +3,15 @@ package com.letslive.letslearnbackend.services;
 import com.letslive.letslearnbackend.dto.AssignmentResponseDTO;
 import com.letslive.letslearnbackend.dto.QuizResponseDTO;
 import com.letslive.letslearnbackend.dto.UserDTO;
-import com.letslive.letslearnbackend.entities.QuizResponse;
 import com.letslive.letslearnbackend.entities.User;
 import com.letslive.letslearnbackend.exception.CustomException;
 import com.letslive.letslearnbackend.mappers.AssignmentResponseMapper;
 import com.letslive.letslearnbackend.mappers.QuizResponseMapper;
 import com.letslive.letslearnbackend.mappers.UserMapper;
 import com.letslive.letslearnbackend.repositories.AssignmentResponseRepository;
-import com.letslive.letslearnbackend.repositories.CourseRepository;
 import com.letslive.letslearnbackend.repositories.QuizResponseRepository;
 import com.letslive.letslearnbackend.repositories.UserRepository;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -30,10 +27,6 @@ public class UserService {
 
     public UserDTO findUserById(UUID id) {
         User user = userRepository.findById(id).orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
-
-        assignmentResponseRepository.findAllByStudentId(user.getId()).stream().map(AssignmentResponseMapper::toDTO).toList();
-        assignmentResponseRepository.findAllByStudentId(user.getId()).stream().map(AssignmentResponseMapper::toDTO).toList();
-
         return UserMapper.mapToDTO(user);
     }
 
