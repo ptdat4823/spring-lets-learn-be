@@ -5,9 +5,7 @@ import com.letslive.letslearnbackend.dto.StudentWorksInACourseDTO;
 import com.letslive.letslearnbackend.dto.UserDTO;
 import com.letslive.letslearnbackend.security.JwtTokenVo;
 import com.letslive.letslearnbackend.security.SecurityUtils;
-import com.letslive.letslearnbackend.services.AssignmentResponseService;
 import com.letslive.letslearnbackend.services.UserService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,10 +22,15 @@ import java.util.UUID;
 @Validated
 public class UserController {
     private final UserService userService;
-    private final AssignmentResponseService assignmentResponseService;
+
+    @GetMapping("/work")
+    public ResponseEntity<List<StudentWorksInACourseDTO>> getAllQuizzesOfUser(@RequestParam String type) {
+        JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        return ResponseEntity.ok(userService.getAllWorksOfUser(vo.getUserID(), type));
+    }
 
     @GetMapping(value = "/me", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<UserDTO> getSelfInformation(HttpServletRequest request) {
+    public ResponseEntity<UserDTO> getSelfInformation() {
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         UserDTO user = userService.findUserById(vo.getUserID());
         return ResponseEntity.ok(user);
@@ -42,10 +45,5 @@ public class UserController {
     @GetMapping("/{id}/assignment-responses")
     public ResponseEntity<List<AssignmentResponseDTO>> getAllAssignmentResponsesOfUser(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.getAllAssignmentResponsesOfUser(id));
-    }
-
-    @GetMapping("/{id}/work")
-    public ResponseEntity<List<StudentWorksInACourseDTO>> getAllQuizzesOfUser(@PathVariable UUID id, @RequestParam String type) {
-        return ResponseEntity.ok(userService.getAllWorksOfUser(id, type));
     }
 }
