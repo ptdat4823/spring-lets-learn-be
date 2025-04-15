@@ -204,7 +204,7 @@ public class TopicService {
 
         switch (topic.getType()) {
             case "quiz":
-                TopicQuiz topicQuiz = topicQuizRepository.findByTopicId(topic.getId());
+                TopicQuiz topicQuiz = topicQuizRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No topic quiz found!", HttpStatus.NOT_FOUND));
                 try {
                     topicData = mapper.writeValueAsString(topicQuiz);
                     Optional<QuizResponse> res = quizResponseRepository.findByTopicIdAndStudentId(topicQuiz.getId(), userId);
@@ -214,7 +214,7 @@ public class TopicService {
                 }
                 break;
             case "assignment":
-                TopicAssignment topicAssignment = topicAssigmentRepository.findByTopicId(topic.getId());
+                TopicAssignment topicAssignment = topicAssigmentRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No assignment found!", HttpStatus.NOT_FOUND));
                 try {
                     topicData = mapper.writeValueAsString(topicAssignment);
 
@@ -225,7 +225,7 @@ public class TopicService {
                 }
                 break;
             case "meeting":
-                TopicMeeting topicMeeting = topicMeetingRepository.findByTopicId(topic.getId());
+                TopicMeeting topicMeeting = topicMeetingRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No meeting found!", HttpStatus.NOT_FOUND));
                 try {
                     topicData = mapper.writeValueAsString(topicMeeting);
                 } catch (JsonProcessingException e) {

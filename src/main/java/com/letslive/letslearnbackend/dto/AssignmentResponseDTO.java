@@ -1,9 +1,6 @@
 package com.letslive.letslearnbackend.dto;
 
 import com.letslive.letslearnbackend.entities.CloudinaryFile;
-import com.letslive.letslearnbackend.entities.TopicAssignment;
-import com.letslive.letslearnbackend.entities.User;
-import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
 

@@ -1,7 +1,7 @@
 package com.letslive.letslearnbackend.controllers;
 
 import com.letslive.letslearnbackend.dto.AssignmentResponseDTO;
-import com.letslive.letslearnbackend.dto.QuizResponseDTO;
+import com.letslive.letslearnbackend.dto.StudentWorksInACourseDTO;
 import com.letslive.letslearnbackend.dto.UserDTO;
 import com.letslive.letslearnbackend.security.JwtTokenVo;
 import com.letslive.letslearnbackend.security.SecurityUtils;
@@ -13,10 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -47,8 +44,8 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllAssignmentResponsesOfUser(id));
     }
 
-    @GetMapping("/{id}/quiz-responses")
-    public ResponseEntity<List<QuizResponseDTO>> getAllQuizResponsesOfUser(@PathVariable UUID id) {
-        return ResponseEntity.ok(userService.getAllQuizResponsesOfUser(id));
+    @GetMapping("/{id}/work")
+    public ResponseEntity<List<StudentWorksInACourseDTO>> getAllQuizzesOfUser(@PathVariable UUID id, @RequestParam String type) {
+        return ResponseEntity.ok(userService.getAllWorksOfUser(id, type));
     }
 }
