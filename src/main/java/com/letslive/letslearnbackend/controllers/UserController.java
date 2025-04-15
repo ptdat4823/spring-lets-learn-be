@@ -24,7 +24,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/work")
-    public ResponseEntity<List<StudentWorksInACourseDTO>> getAllQuizzesOfUser(@RequestParam String type) {
+    public ResponseEntity<List<StudentWorksInACourseDTO>> getAllWorksOfUser(@RequestParam String type) {
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return ResponseEntity.ok(userService.getAllWorksOfUser(vo.getUserID(), type));
     }
