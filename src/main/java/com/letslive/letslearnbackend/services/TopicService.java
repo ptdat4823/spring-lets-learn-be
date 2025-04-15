@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -206,7 +207,8 @@ public class TopicService {
                 TopicQuiz topicQuiz = topicQuizRepository.findByTopicId(topic.getId());
                 try {
                     topicData = mapper.writeValueAsString(topicQuiz);
-                    studentResponseData = mapper.writeValueAsString(quizResponseRepository.findByTopicIdAndStudentId(topicQuiz.getId(), userId));
+                    Optional<QuizResponse> res = quizResponseRepository.findByTopicIdAndStudentId(topicQuiz.getId(), userId);
+                    if (res.isPresent()) studentResponseData = mapper.writeValueAsString(res);
                 } catch (JsonProcessingException e) {
                     throw new CustomException("Error parsing quiz data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
                 }
@@ -215,7 +217,9 @@ public class TopicService {
                 TopicAssignment topicAssignment = topicAssigmentRepository.findByTopicId(topic.getId());
                 try {
                     topicData = mapper.writeValueAsString(topicAssignment);
-                    studentResponseData = mapper.writeValueAsString(assignmentResponseRepository.findByTopicIdAndStudentId(topicAssignment.getTopicId(), userId));
+
+                    Optional<AssignmentResponse> res = assignmentResponseRepository.findByTopicIdAndStudentId(topicAssignment.getTopicId(), userId);
+                    if (res.isPresent()) studentResponseData = mapper.writeValueAsString(res);
                 } catch (JsonProcessingException e) {
                     throw new CustomException("Error parsing assigment data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
                 }
