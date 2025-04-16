@@ -3,6 +3,8 @@ package com.letslive.letslearnbackend.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.letslive.letslearnbackend.dto.*;
+import com.letslive.letslearnbackend.entities.AssignmentResponse;
+import com.letslive.letslearnbackend.entities.QuizResponse;
 import com.letslive.letslearnbackend.entities.User;
 import com.letslive.letslearnbackend.exception.CustomException;
 import com.letslive.letslearnbackend.mappers.*;
@@ -13,7 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -42,36 +44,6 @@ public class UserService {
         return assignmentResponseRepository.findAllByStudentId(userId).stream().map(AssignmentResponseMapper::toDTO).toList();
     }
 
-    public List<CourseQuizzesDTO> getAllQuizzesOfUser(UUID userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
-        List<CourseQuizzesDTO> result = new ArrayList<>();
-
-        user.getCourses().forEach(course -> {
-            List<String> quizzes = new ArrayList<>();
-
-            course.getSections().forEach(courseSection -> {
-                courseSection.getTopics().forEach(topicSection -> {
-                    if (Objects.equals(topicSection.getType(), "quiz")) {
-                        topicQuizRepository.findByTopicId(topicSection.getId()).ifPresent(topicQuiz -> {
-                            try {
-                                quizzes.add(mapper.writeValueAsString(topicQuiz));
-                            } catch (JsonProcessingException e) {
-                                throw new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR);
-                            }
-                        });
-                    }
-                });
-            });
-
-            result.add(new CourseQuizzesDTO(
-                    CourseMapper.mapToDTO(course),
-                    quizzes
-            ));
-        });
-
-        return result;
-    }
-
     public List<StudentWorksInACourseDTO> getAllWorksOfUser(UUID userId, String type, UUID courseId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
@@ -90,6 +62,13 @@ public class UserService {
                                         try {
                                             String data = mapper.writeValueAsString(topicQuiz);
                                             TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
+
+                                            Optional<QuizResponse> res = quizResponseRepository.findByTopicIdAndStudentId(topicQuiz.getId(), userId);
+                                            if (res.isPresent()) {
+                                                String resData = mapper.writeValueAsString(res);
+                                                topicDTO.setResponse(resData);
+                                            }
+
                                             topicDTO.setData(data);
                                             works.add(topicDTO);
                                         } catch (JsonProcessingException e) {
@@ -104,6 +83,13 @@ public class UserService {
                                         try {
                                             String data = mapper.writeValueAsString(topicAssignment);
                                             TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
+
+                                            Optional<AssignmentResponse> res = assignmentResponseRepository.findByTopicIdAndStudentId(topicAssignment.getId(), userId);
+                                            if (res.isPresent()) {
+                                                String resData = mapper.writeValueAsString(res);
+                                                topicDTO.setResponse(resData);
+                                            }
+
                                             topicDTO.setData(data);
                                             works.add(topicDTO);
                                         } catch (JsonProcessingException e) {

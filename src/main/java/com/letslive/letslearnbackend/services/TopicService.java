@@ -217,7 +217,6 @@ public class TopicService {
                 TopicAssignment topicAssignment = topicAssigmentRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No assignment found!", HttpStatus.NOT_FOUND));
                 try {
                     topicData = mapper.writeValueAsString(topicAssignment);
-
                     Optional<AssignmentResponse> res = assignmentResponseRepository.findByTopicIdAndStudentId(topicAssignment.getTopicId(), userId);
                     if (res.isPresent()) studentResponseData = mapper.writeValueAsString(res);
                 } catch (JsonProcessingException e) {

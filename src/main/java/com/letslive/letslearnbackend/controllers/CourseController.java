@@ -44,8 +44,14 @@ public class CourseController {
     }
 
     @GetMapping(value = "/{id}/work", produces = MediaType.APPLICATION_JSON_VALUE)
+<<<<<<< HEAD
     public ResponseEntity<List<TopicDTO>> getWorksOfCourse(@PathVariable UUID id, @RequestParam(required = false) String type) {
         return ResponseEntity.ok(courseService.getAllWorksOfCourse(id, type));
+=======
+    public ResponseEntity<List<TopicDTO>> getWorksOfCourseAndUser(@PathVariable UUID id, @RequestParam(required = false) String type) {
+        JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        return ResponseEntity.ok(courseService.getAllWorksOfCourseAndUser(id, vo.getUserID(), type));
+>>>>>>> aa2482a (add response on student work)
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)

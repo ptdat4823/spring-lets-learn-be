@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.letslive.letslearnbackend.dto.CourseDTO;
 import com.letslive.letslearnbackend.dto.TopicDTO;
+import com.letslive.letslearnbackend.entities.AssignmentResponse;
 import com.letslive.letslearnbackend.entities.Course;
+import com.letslive.letslearnbackend.entities.QuizResponse;
 import com.letslive.letslearnbackend.entities.User;
 import com.letslive.letslearnbackend.exception.CustomException;
 import com.letslive.letslearnbackend.mappers.CourseMapper;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -27,6 +30,8 @@ public class CourseService {
     private final ObjectMapper mapper = new ObjectMapper();
     private final TopicAssigmentRepository topicAssigmentRepository;
     private final TopicMeetingRepository topicMeetingRepository;
+    private final QuizResponseRepository quizResponseRepository;
+    private final AssignmentResponseRepository assignmentResponseRepository;
 
     public List<CourseDTO> getAllCoursesByUserID(UUID userID) {
         userRepository
@@ -86,8 +91,11 @@ public class CourseService {
         userRepository.save(user);
     }
 
-    public List<TopicDTO> getAllWorksOfCourse(UUID courseId, String type) {
-        Course course = courseRepository.findById(courseId).orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
+    public List<TopicDTO> getAllWorksOfCourseAndUser(UUID courseId, UUID userId, String type) {
+        Course course = courseRepository
+                .findById(courseId)
+                .orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
+
         List<TopicDTO> result = new ArrayList<>();
 
         course.getSections().forEach(courseSection -> {
@@ -100,6 +108,13 @@ public class CourseService {
                                     try {
                                         String data = mapper.writeValueAsString(topicQuiz);
                                         TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
+
+                                        Optional<QuizResponse> res = quizResponseRepository.findByTopicIdAndStudentId(topicQuiz.getId(), userId);
+                                        if (res.isPresent()) {
+                                            String resData = mapper.writeValueAsString(res);
+                                            topicDTO.setResponse(resData);
+                                        }
+
                                         topicDTO.setData(data);
                                         result.add(topicDTO);
                                     } catch (JsonProcessingException e) {
@@ -114,6 +129,13 @@ public class CourseService {
                                     try {
                                         String data = mapper.writeValueAsString(topicAssignment);
                                         TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
+
+                                        Optional<AssignmentResponse> res = assignmentResponseRepository.findByTopicIdAndStudentId(topicAssignment.getId(), userId);
+                                        if (res.isPresent()) {
+                                            String resData = mapper.writeValueAsString(res);
+                                            topicDTO.setResponse(resData);
+                                        }
+
                                         topicDTO.setData(data);
                                         result.add(topicDTO);
                                     } catch (JsonProcessingException e) {
