@@ -1,6 +1,7 @@
 package com.letslive.letslearnbackend.controllers;
 
 import com.letslive.letslearnbackend.dto.CourseDTO;
+import com.letslive.letslearnbackend.dto.TopicDTO;
 import com.letslive.letslearnbackend.dto.UserDTO;
 import com.letslive.letslearnbackend.mappers.UserMapper;
 import com.letslive.letslearnbackend.security.JwtTokenVo;
@@ -43,8 +44,9 @@ public class CourseController {
     }
 
     @GetMapping(value = "/{id}/work", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<String>> getWorksOfCourse(@PathVariable UUID id, @RequestParam(required = false) String type) {
-        return ResponseEntity.ok(courseService.getAllWorksOfCourse(id, type));
+    public ResponseEntity<List<TopicDTO>> getWorksOfCourseAndUser(@PathVariable UUID id, @RequestParam(required = false) String type) {
+        JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        return ResponseEntity.ok(courseService.getAllWorksOfCourseAndUser(id, vo.getUserID(), type));
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
