@@ -2,6 +2,7 @@ package com.letslive.letslearnbackend.controllers;
 
 import com.letslive.letslearnbackend.dto.AssignmentResponseDTO;
 import com.letslive.letslearnbackend.dto.StudentWorksInACourseDTO;
+import com.letslive.letslearnbackend.dto.TopicDTO;
 import com.letslive.letslearnbackend.dto.UserDTO;
 import com.letslive.letslearnbackend.security.JwtTokenVo;
 import com.letslive.letslearnbackend.security.SecurityUtils;
@@ -24,7 +25,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/work")
-    public ResponseEntity<List<StudentWorksInACourseDTO>> getAllWorksOfUser(@RequestParam(required = false) String type, @RequestParam(required = false) UUID courseId) {
+    public ResponseEntity<List<TopicDTO>> getAllWorksOfUser(@RequestParam(required = false) String type, @RequestParam(required = false) UUID courseId) {
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return ResponseEntity.ok(userService.getAllWorksOfUser(vo.getUserID(), type, courseId));
     }

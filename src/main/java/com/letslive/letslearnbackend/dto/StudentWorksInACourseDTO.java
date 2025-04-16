@@ -11,5 +11,5 @@ import java.util.List;
 @AllArgsConstructor
 public class StudentWorksInACourseDTO {
     private CourseDTO course;
-    private List<String> data;
+    private List<TopicDTO> data;
 }

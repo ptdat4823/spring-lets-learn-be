@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.letslive.letslearnbackend.dto.*;
 import com.letslive.letslearnbackend.entities.User;
 import com.letslive.letslearnbackend.exception.CustomException;
-import com.letslive.letslearnbackend.mappers.AssignmentResponseMapper;
-import com.letslive.letslearnbackend.mappers.CourseMapper;
-import com.letslive.letslearnbackend.mappers.QuizResponseMapper;
-import com.letslive.letslearnbackend.mappers.UserMapper;
+import com.letslive.letslearnbackend.mappers.*;
 import com.letslive.letslearnbackend.repositories.*;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -81,7 +78,7 @@ public class UserService {
         List<StudentWorksInACourseDTO> result = new ArrayList<>();
 
         user.getCourses().forEach(course -> {
-            List<String> works = new ArrayList<>();
+            List<TopicDTO> works = new ArrayList<>();
 
             course.getSections().forEach(courseSection -> {
                 courseSection.getTopics().forEach(topicSection -> {
@@ -91,7 +88,10 @@ public class UserService {
                                 if (type == null || type.equals("quiz")) {
                                     topicQuizRepository.findByTopicId(topicSection.getId()).ifPresent(topicQuiz -> {
                                         try {
-                                            works.add(mapper.writeValueAsString(topicQuiz));
+                                            String data = mapper.writeValueAsString(topicQuiz);
+                                            TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
+                                            topicDTO.setData(data);
+                                            works.add(topicDTO);
                                         } catch (JsonProcessingException e) {
                                             throw new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR);
                                         }
@@ -102,7 +102,10 @@ public class UserService {
                                 if (type == null || type.equals("assignment")) {
                                     topicAssigmentRepository.findByTopicId(topicSection.getId()).ifPresent(topicAssignment -> {
                                         try {
-                                            works.add(mapper.writeValueAsString(topicAssignment));
+                                            String data = mapper.writeValueAsString(topicAssignment);
+                                            TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
+                                            topicDTO.setData(data);
+                                            works.add(topicDTO);
                                         } catch (JsonProcessingException e) {
                                             throw new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR);
                                         }
@@ -113,7 +116,10 @@ public class UserService {
                                 if (type == null || type.equals("meeting")) {
                                     topicMeetingRepository.findByTopicId(topicSection.getId()).ifPresent(topicMeeting -> {
                                         try {
-                                            works.add(mapper.writeValueAsString(topicMeeting));
+                                            String data = mapper.writeValueAsString(topicMeeting);
+                                            TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
+                                            topicDTO.setData(data);
+                                            works.add(topicDTO);
                                         } catch (JsonProcessingException e) {
                                             throw new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR);
                                         }

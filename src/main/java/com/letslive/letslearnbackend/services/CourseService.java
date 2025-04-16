@@ -3,10 +3,12 @@ package com.letslive.letslearnbackend.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.letslive.letslearnbackend.dto.CourseDTO;
+import com.letslive.letslearnbackend.dto.TopicDTO;
 import com.letslive.letslearnbackend.entities.Course;
 import com.letslive.letslearnbackend.entities.User;
 import com.letslive.letslearnbackend.exception.CustomException;
 import com.letslive.letslearnbackend.mappers.CourseMapper;
+import com.letslive.letslearnbackend.mappers.TopicMapper;
 import com.letslive.letslearnbackend.repositories.*;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -84,9 +86,9 @@ public class CourseService {
         userRepository.save(user);
     }
 
-    public List<String> getAllWorksOfCourse(UUID courseId, String type) {
+    public List<TopicDTO> getAllWorksOfCourse(UUID courseId, String type) {
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
-        List<String> result = new ArrayList<>();
+        List<TopicDTO> result = new ArrayList<>();
 
         course.getSections().forEach(courseSection -> {
             courseSection.getTopics().forEach(topicSection -> {
@@ -96,7 +98,10 @@ public class CourseService {
                             if (type == null || type.equals("quiz")) {
                                 topicQuizRepository.findByTopicId(topicSection.getId()).ifPresent(topicQuiz -> {
                                     try {
-                                        result.add(mapper.writeValueAsString(topicQuiz));
+                                        String data = mapper.writeValueAsString(topicQuiz);
+                                        TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
+                                        topicDTO.setData(data);
+                                        result.add(topicDTO);
                                     } catch (JsonProcessingException e) {
                                         throw new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR);
                                     }
@@ -107,7 +112,10 @@ public class CourseService {
                             if (type == null || type.equals("assignment")) {
                                 topicAssigmentRepository.findByTopicId(topicSection.getId()).ifPresent(topicAssignment -> {
                                     try {
-                                        result.add(mapper.writeValueAsString(topicAssignment));
+                                        String data = mapper.writeValueAsString(topicAssignment);
+                                        TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
+                                        topicDTO.setData(data);
+                                        result.add(topicDTO);
                                     } catch (JsonProcessingException e) {
                                         throw new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR);
                                     }
@@ -118,7 +126,11 @@ public class CourseService {
                             if (type == null || type.equals("meeting")) {
                                 topicMeetingRepository.findByTopicId(topicSection.getId()).ifPresent(topicMeeting -> {
                                     try {
-                                        result.add(mapper.writeValueAsString(topicMeeting));
+
+                                        String data = mapper.writeValueAsString(topicMeeting);
+                                        TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
+                                        topicDTO.setData(data);
+                                        result.add(topicDTO);
                                     } catch (JsonProcessingException e) {
                                         throw new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR);
                                     }
