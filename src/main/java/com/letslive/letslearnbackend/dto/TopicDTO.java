@@ -14,5 +14,6 @@ public class TopicDTO {
     private String type;
     private String data;
     private String response;
+    private CourseDTO course;
 }
 

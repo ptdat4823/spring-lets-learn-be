@@ -1,13 +1,14 @@
 package com.letslive.letslearnbackend.entities;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "courses")
@@ -24,6 +25,9 @@ public class Course {
     
     private String title;
     private String description;
+
+    @ColumnDefault(value = "0")
+    private Integer totalJoined; // not as same as currentJoin
     private String imageUrl;
     private BigDecimal price;
     private String category;

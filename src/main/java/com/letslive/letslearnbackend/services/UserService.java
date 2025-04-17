@@ -46,17 +46,15 @@ public class UserService {
         return assignmentResponseRepository.findAllByStudentId(userId).stream().map(AssignmentResponseMapper::toDTO).toList();
     }
 
-    public List<StudentWorksInACourseDTO> getAllWorksOfUser(UUID userId, String type, UUID courseId, LocalDateTime start, LocalDateTime end) {
+    public List<TopicDTO> getAllWorksOfUser(UUID userId, String type, LocalDateTime start, LocalDateTime end) {
         if ((start != null || end != null) && (start == null || end == null)) throw new CustomException("Provide start and end time!", HttpStatus.BAD_REQUEST);
         if (start != null && start.isAfter(end)) throw new CustomException("Start time must be after end time", HttpStatus.BAD_REQUEST);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
-        List<StudentWorksInACourseDTO> result = new ArrayList<>();
+        List<TopicDTO> result = new ArrayList<>();
 
         user.getCourses().forEach(course -> {
-            List<TopicDTO> works = new ArrayList<>();
-
             course.getSections().forEach(courseSection -> {
                 courseSection.getTopics().forEach(topicSection -> {
                     if (type == null || type.isEmpty() || type.equals(topicSection.getType())) {
@@ -80,7 +78,8 @@ public class UserService {
                                             }
 
                                             topicDTO.setData(data);
-                                            works.add(topicDTO);
+                                            topicDTO.setCourse(CourseMapper.mapToDTO(course));
+                                            result.add(topicDTO);
                                         } catch (JsonProcessingException e) {
                                             throw new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR);
                                         }
@@ -106,7 +105,8 @@ public class UserService {
                                             }
 
                                             topicDTO.setData(data);
-                                            works.add(topicDTO);
+                                            topicDTO.setCourse(CourseMapper.mapToDTO(course));
+                                            result.add(topicDTO);
                                         } catch (JsonProcessingException e) {
                                             throw new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR);
                                         }
@@ -125,7 +125,8 @@ public class UserService {
                                             String data = mapper.writeValueAsString(topicMeeting);
                                             TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
                                             topicDTO.setData(data);
-                                            works.add(topicDTO);
+                                            topicDTO.setCourse(CourseMapper.mapToDTO(course));
+                                            result.add(topicDTO);
                                         } catch (JsonProcessingException e) {
                                             throw new CustomException("Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR);
                                         }
@@ -138,13 +139,6 @@ public class UserService {
                     }
                 });
             });
-
-            if (!works.isEmpty()) {
-                result.add(new StudentWorksInACourseDTO(
-                        course.getId(),
-                        works
-                ));
-            }
         });
 
         return result;

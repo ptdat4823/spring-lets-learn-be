@@ -88,6 +88,7 @@ public class CourseService {
 
         user.getCourses().add(course);
         course.getStudents().add(user);
+        course.setTotalJoined(course.getTotalJoined() + 1);
 
         courseRepository.save(course);
         userRepository.save(user);

@@ -24,13 +24,13 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/work")
-    public ResponseEntity<List<StudentWorksInACourseDTO>> getAllWorksOfUser(
+    public ResponseEntity<List<TopicDTO>> getAllWorksOfUser(
             @RequestParam(required = false) String type,
             @RequestParam(required = false) UUID courseId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-        return ResponseEntity.ok(userService.getAllWorksOfUser(vo.getUserID(), type, courseId, start, end));
+        return ResponseEntity.ok(userService.getAllWorksOfUser(vo.getUserID(), type, start, end));
     }
 
     @GetMapping(value = "/me", produces = MediaType.APPLICATION_JSON_VALUE)
