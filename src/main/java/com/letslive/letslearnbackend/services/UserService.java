@@ -9,10 +9,12 @@ import com.letslive.letslearnbackend.entities.User;
 import com.letslive.letslearnbackend.exception.CustomException;
 import com.letslive.letslearnbackend.mappers.*;
 import com.letslive.letslearnbackend.repositories.*;
+import com.letslive.letslearnbackend.utils.TimeUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -44,7 +46,10 @@ public class UserService {
         return assignmentResponseRepository.findAllByStudentId(userId).stream().map(AssignmentResponseMapper::toDTO).toList();
     }
 
-    public List<StudentWorksInACourseDTO> getAllWorksOfUser(UUID userId, String type, UUID courseId) {
+    public List<StudentWorksInACourseDTO> getAllWorksOfUser(UUID userId, String type, UUID courseId, LocalDateTime start, LocalDateTime end) {
+        if ((start != null || end != null) && (start == null || end == null)) throw new CustomException("Provide start and end time!", HttpStatus.BAD_REQUEST);
+        if (start != null && start.isAfter(end)) throw new CustomException("Start time must be after end time", HttpStatus.BAD_REQUEST);
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
         List<StudentWorksInACourseDTO> result = new ArrayList<>();
@@ -59,6 +64,11 @@ public class UserService {
                             case "quiz":
                                 if (type == null || type.equals("quiz")) {
                                     topicQuizRepository.findByTopicId(topicSection.getId()).ifPresent(topicQuiz -> {
+                                        if (end != null) {
+                                            LocalDateTime endTime = TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose());
+                                            if (!endTime.isBefore(end)) return;
+                                        }
+
                                         try {
                                             String data = mapper.writeValueAsString(topicQuiz);
                                             TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
@@ -80,6 +90,11 @@ public class UserService {
                             case "assignment":
                                 if (type == null || type.equals("assignment")) {
                                     topicAssigmentRepository.findByTopicId(topicSection.getId()).ifPresent(topicAssignment -> {
+                                        if (end != null) {
+                                            LocalDateTime endTime = TimeUtils.convertStringToLocalDateTime(topicAssignment.getClose());
+                                            if (!endTime.isBefore(end)) return;
+                                        }
+
                                         try {
                                             String data = mapper.writeValueAsString(topicAssignment);
                                             TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
@@ -101,6 +116,11 @@ public class UserService {
                             case "meeting":
                                 if (type == null || type.equals("meeting")) {
                                     topicMeetingRepository.findByTopicId(topicSection.getId()).ifPresent(topicMeeting -> {
+                                        if (end != null) {
+                                            LocalDateTime startTime = TimeUtils.convertStringToLocalDateTime(topicMeeting.getOpen());
+                                            if (!(startTime.isAfter(start) && startTime.isBefore(end))) return;
+                                        }
+
                                         try {
                                             String data = mapper.writeValueAsString(topicMeeting);
                                             TopicDTO topicDTO = TopicMapper.toDTO(topicSection);

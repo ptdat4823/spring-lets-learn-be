@@ -9,12 +9,14 @@ import com.letslive.letslearnbackend.security.SecurityUtils;
 import com.letslive.letslearnbackend.services.CourseService;
 import com.letslive.letslearnbackend.services.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,9 +46,13 @@ public class CourseController {
     }
 
     @GetMapping(value = "/{id}/work", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<TopicDTO>> getWorksOfCourseAndUser(@PathVariable UUID id, @RequestParam(required = false) String type) {
+    public ResponseEntity<List<TopicDTO>> getWorksOfCourseAndUser(
+            @PathVariable UUID id,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-        return ResponseEntity.ok(courseService.getAllWorksOfCourseAndUser(id, vo.getUserID(), type));
+        return ResponseEntity.ok(courseService.getAllWorksOfCourseAndUser(id, vo.getUserID(), type, start, end));
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)

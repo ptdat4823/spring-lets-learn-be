@@ -12,10 +12,12 @@ import com.letslive.letslearnbackend.exception.CustomException;
 import com.letslive.letslearnbackend.mappers.CourseMapper;
 import com.letslive.letslearnbackend.mappers.TopicMapper;
 import com.letslive.letslearnbackend.repositories.*;
+import com.letslive.letslearnbackend.utils.TimeUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -91,7 +93,10 @@ public class CourseService {
         userRepository.save(user);
     }
 
-    public List<TopicDTO> getAllWorksOfCourseAndUser(UUID courseId, UUID userId, String type) {
+    public List<TopicDTO> getAllWorksOfCourseAndUser(UUID courseId, UUID userId, String type, LocalDateTime start, LocalDateTime end) {
+        if ((start != null || end != null) && (start == null || end == null)) throw new CustomException("Provide start and end time!", HttpStatus.BAD_REQUEST);
+        if (start != null && start.isAfter(end)) throw new CustomException("Start time must be after end time", HttpStatus.BAD_REQUEST);
+
         Course course = courseRepository
                 .findById(courseId)
                 .orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
@@ -105,6 +110,11 @@ public class CourseService {
                         case "quiz":
                             if (type == null || type.equals("quiz")) {
                                 topicQuizRepository.findByTopicId(topicSection.getId()).ifPresent(topicQuiz -> {
+                                    if (end != null) {
+                                        LocalDateTime endTime = TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose());
+                                        if (!endTime.isBefore(end)) return;
+                                    }
+
                                     try {
                                         String data = mapper.writeValueAsString(topicQuiz);
                                         TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
@@ -126,6 +136,11 @@ public class CourseService {
                         case "assignment":
                             if (type == null || type.equals("assignment")) {
                                 topicAssigmentRepository.findByTopicId(topicSection.getId()).ifPresent(topicAssignment -> {
+                                    if (end != null) {
+                                        LocalDateTime endTime = TimeUtils.convertStringToLocalDateTime(topicAssignment.getClose());
+                                        if (!endTime.isBefore(end)) return;
+                                    }
+
                                     try {
                                         String data = mapper.writeValueAsString(topicAssignment);
                                         TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
@@ -147,8 +162,12 @@ public class CourseService {
                         case "meeting":
                             if (type == null || type.equals("meeting")) {
                                 topicMeetingRepository.findByTopicId(topicSection.getId()).ifPresent(topicMeeting -> {
-                                    try {
+                                    if (end != null) {
+                                        LocalDateTime startTime = TimeUtils.convertStringToLocalDateTime(topicMeeting.getOpen());
+                                        if (!(startTime.isAfter(start) && startTime.isBefore(end))) return;
+                                    }
 
+                                    try {
                                         String data = mapper.writeValueAsString(topicMeeting);
                                         TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
                                         topicDTO.setData(data);
