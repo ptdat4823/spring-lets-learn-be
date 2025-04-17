@@ -141,7 +141,7 @@ public class UserService {
 
             if (!works.isEmpty()) {
                 result.add(new StudentWorksInACourseDTO(
-                        CourseMapper.mapToDTO(course),
+                        course.getId(),
                         works
                 ));
             }
