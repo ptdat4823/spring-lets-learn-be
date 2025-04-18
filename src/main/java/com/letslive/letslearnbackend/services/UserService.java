@@ -73,7 +73,7 @@ public class UserService {
 
                                             Optional<QuizResponse> res = quizResponseRepository.findByTopicIdAndStudentId(topicQuiz.getTopicId(), userId);
                                             if (res.isPresent()) {
-                                                String resData = mapper.writeValueAsString(res);
+                                                String resData = mapper.writeValueAsString(res.get());
                                                 topicDTO.setResponse(resData);
                                             }
 
@@ -100,7 +100,7 @@ public class UserService {
 
                                             Optional<AssignmentResponse> res = assignmentResponseRepository.findByTopicIdAndStudentId(topicAssignment.getTopicId(), userId);
                                             if (res.isPresent()) {
-                                                String resData = mapper.writeValueAsString(res);
+                                                String resData = mapper.writeValueAsString(res.get());
                                                 topicDTO.setResponse(resData);
                                             }
 
