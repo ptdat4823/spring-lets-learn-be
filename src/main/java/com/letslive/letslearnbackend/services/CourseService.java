@@ -35,19 +35,11 @@ public class CourseService {
     private final QuizResponseRepository quizResponseRepository;
     private final AssignmentResponseRepository assignmentResponseRepository;
     private final TopicService topicService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public List<CourseDTO> getAllCoursesByUserID(UUID userID) {
-        userRepository
-                .findById(userID)
-                .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
-
-        return courseRepository.findByCreatorId(userID).stream().map(CourseMapper::mapToDTO).toList();
-    }
-
-    public CourseDTO getCourse(UUID id) {
+    // get course DOES NOT have the topic data with it, must populate it manually
+    private CourseDTO getCourseWithTopicData(UUID courseId) {
         Course course = courseRepository
-                .findById(id)
+                .findById(courseId)
                 .orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
 
         CourseDTO courseDTO = CourseMapper.mapToDTO(course);
@@ -60,6 +52,22 @@ public class CourseService {
         });
 
         return courseDTO;
+    }
+
+    public List<CourseDTO> getAllCoursesByUserID(UUID userID) {
+        userRepository
+                .findById(userID)
+                .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
+
+        return courseRepository
+                .findByCreatorId(userID)
+                .stream()
+                .map(c -> getCourseWithTopicData(c.getId()))
+                .toList();
+    }
+
+    public CourseDTO getCourse(UUID id) {
+        return getCourseWithTopicData(id);
     }
 
     public List<CourseDTO> getAllPublicCourses() {
