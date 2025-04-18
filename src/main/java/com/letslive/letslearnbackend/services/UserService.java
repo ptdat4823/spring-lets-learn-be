@@ -71,7 +71,7 @@ public class UserService {
                                             String data = mapper.writeValueAsString(topicQuiz);
                                             TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
 
-                                            Optional<QuizResponse> res = quizResponseRepository.findByTopicIdAndStudentId(topicQuiz.getId(), userId);
+                                            Optional<QuizResponse> res = quizResponseRepository.findByTopicIdAndStudentId(topicQuiz.getTopicId(), userId);
                                             if (res.isPresent()) {
                                                 String resData = mapper.writeValueAsString(res);
                                                 topicDTO.setResponse(resData);
@@ -98,7 +98,7 @@ public class UserService {
                                             String data = mapper.writeValueAsString(topicAssignment);
                                             TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
 
-                                            Optional<AssignmentResponse> res = assignmentResponseRepository.findByTopicIdAndStudentId(topicAssignment.getId(), userId);
+                                            Optional<AssignmentResponse> res = assignmentResponseRepository.findByTopicIdAndStudentId(topicAssignment.getTopicId(), userId);
                                             if (res.isPresent()) {
                                                 String resData = mapper.writeValueAsString(res);
                                                 topicDTO.setResponse(resData);
