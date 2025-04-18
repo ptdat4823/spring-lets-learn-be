@@ -34,6 +34,8 @@ public class CourseService {
     private final TopicMeetingRepository topicMeetingRepository;
     private final QuizResponseRepository quizResponseRepository;
     private final AssignmentResponseRepository assignmentResponseRepository;
+    private final TopicService topicService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public List<CourseDTO> getAllCoursesByUserID(UUID userID) {
         userRepository
@@ -48,7 +50,16 @@ public class CourseService {
                 .findById(id)
                 .orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
 
-        return CourseMapper.mapToDTO(course);
+        CourseDTO courseDTO = CourseMapper.mapToDTO(course);
+
+        courseDTO.getSections().forEach(sectionDTO -> {
+            sectionDTO.getTopics().forEach(topicDTO -> {
+                TopicDTO topicData = topicService.getTopicById(topicDTO.getId(), null);
+                topicDTO.setData(topicData.getData());
+            });
+        });
+
+        return courseDTO;
     }
 
     public List<CourseDTO> getAllPublicCourses() {
