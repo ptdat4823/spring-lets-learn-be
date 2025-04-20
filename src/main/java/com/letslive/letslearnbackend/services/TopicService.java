@@ -29,6 +29,9 @@ public class TopicService {
     private final TopicMeetingRepository topicMeetingRepository;
     private final QuizResponseRepository quizResponseRepository;
     private final AssignmentResponseRepository assignmentResponseRepository;
+    private final TopicFileRepository topicFileRepository;
+    private final TopicLinkRepository topicLinkRepository;
+    private final TopicPageRepository topicPageRepository;
 
     ObjectMapper mapper = new ObjectMapper()
             .registerModule(new ParameterNamesModule())
@@ -95,6 +98,39 @@ public class TopicService {
                     createdTopicData = mapper.writeValueAsString(createdTopicMeeting);
                 } catch (JsonProcessingException e) {
                     throw new CustomException("Error parsing meeting data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+                }
+                break;
+            case "file":
+                try {
+                    TopicFile topicFile = mapper.readValue(topicDTO.getData(), TopicFile.class);
+                    topicFile.setId(null);
+                    topicFile.setTopicId(createdTopic.getId());
+                    TopicFile createdTopicFile = topicFileRepository.save(topicFile);
+                    createdTopicData = mapper.writeValueAsString(createdTopicFile);
+                } catch (JsonProcessingException e) {
+                    throw new CustomException("Error parsing file data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+                }
+                break;
+            case "link":
+                try {
+                    TopicLink topicLink = mapper.readValue(topicDTO.getData(), TopicLink.class);
+                    topicLink.setId(null);
+                    topicLink.setTopicId(createdTopic.getId());
+                    TopicLink createdTopicLink = topicLinkRepository.save(topicLink);
+                    createdTopicData = mapper.writeValueAsString(createdTopicLink);
+                } catch (JsonProcessingException e) {
+                    throw new CustomException("Error parsing link data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+                }
+                break;
+            case "page":
+                try {
+                    TopicPage topicPage = mapper.readValue(topicDTO.getData(), TopicPage.class);
+                    topicPage.setId(null);
+                    topicPage.setTopicId(createdTopic.getId());
+                    TopicPage createdTopicPage = topicPageRepository.save(topicPage);
+                    createdTopicData = mapper.writeValueAsString(createdTopicPage);
+                } catch (JsonProcessingException e) {
+                    throw new CustomException("Error parsing page data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
                 }
                 break;
             default:
@@ -184,6 +220,42 @@ public class TopicService {
                     updatedTopicDTO.setData(mapper.writeValueAsString(updatedTopicMeeting));
                 } catch (JsonProcessingException e) {
                     throw new CustomException("Error parsing meeting data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+                }
+                break;
+            case "file":
+                try {
+                    TopicFile topicFile = mapper.readValue(topicDTO.getData(), TopicFile.class);
+                    if (!topicFileRepository.existsById(topicFile.getId())) {
+                        throw new CustomException("Assigment not found!", HttpStatus.NOT_FOUND);
+                    }
+                    TopicFile updatedTopicFile = topicFileRepository.save(topicFile);
+                    updatedTopicDTO.setData(mapper.writeValueAsString(updatedTopicFile));
+                } catch (JsonProcessingException e) {
+                    throw new CustomException("Error parsing file data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+                }
+                break;
+            case "link":
+                try {
+                    TopicLink topicLink = mapper.readValue(topicDTO.getData(), TopicLink.class);
+                    if (!topicLinkRepository.existsById(topicLink.getId())) {
+                        throw new CustomException("Assigment not found!", HttpStatus.NOT_FOUND);
+                    }
+                    TopicLink updatedTopicLink = topicLinkRepository.save(topicLink);
+                    updatedTopicDTO.setData(mapper.writeValueAsString(updatedTopicLink));
+                } catch (JsonProcessingException e) {
+                    throw new CustomException("Error parsing link data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+                }
+                break;
+            case "page":
+                try {
+                    TopicPage topicPage = mapper.readValue(topicDTO.getData(), TopicPage.class);
+                    if (!topicPageRepository.existsById(topicPage.getId())) {
+                        throw new CustomException("Assigment not found!", HttpStatus.NOT_FOUND);
+                    }
+                    TopicPage updateTopicPage = topicPageRepository.save(topicPage);
+                    updatedTopicDTO.setData(mapper.writeValueAsString(updateTopicPage));
+                } catch (JsonProcessingException e) {
+                    throw new CustomException("Error parsing link data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
                 }
                 break;
             default:
