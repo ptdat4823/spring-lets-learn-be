@@ -11,6 +11,7 @@ public class UserMapper {
                 .passwordHash(userDTO.getPassword())
                 .username(userDTO.getUsername())
                 .role(userDTO.getRole())
+                .avatar(userDTO.getAvatar())
                 .build();
     }
 
@@ -20,6 +21,7 @@ public class UserMapper {
                 .id(user.getId())
                 .email(user.getEmail())
                 .username(user.getUsername())
+                .avatar(user.getAvatar())
                 .role(user.getRole());
 
         if (user.getCourses() != null) {

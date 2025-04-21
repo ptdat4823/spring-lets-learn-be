@@ -3,6 +3,7 @@ package com.letslive.letslearnbackend.controllers;
 import com.letslive.letslearnbackend.dto.*;
 import com.letslive.letslearnbackend.security.JwtTokenVo;
 import com.letslive.letslearnbackend.security.SecurityUtils;
+import com.letslive.letslearnbackend.services.AuthService;
 import com.letslive.letslearnbackend.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -22,6 +23,7 @@ import java.util.UUID;
 @Validated
 public class UserController {
     private final UserService userService;
+    private final AuthService authService;
 
     @GetMapping("/work")
     public ResponseEntity<List<TopicDTO>> getAllWorksOfUser(
@@ -40,6 +42,13 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @PutMapping(value = "/me", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserDTO> updateUserInformation(@RequestBody UpdateUserDTO updateUserDTO) {
+        JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        UserDTO user = userService.updateUserById(updateUserDTO, vo.getUserID());
+        return ResponseEntity.ok(user);
+    }
+
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UserDTO> getUserInformation(@PathVariable UUID id) {
         UserDTO user = userService.findUserById(id);
@@ -54,5 +63,12 @@ public class UserController {
     @GetMapping("/{id}/quiz-responses")
     public ResponseEntity<List<QuizResponseDTO>> getAllQuizResponsesOfUser(@PathVariable UUID userId) {
         return ResponseEntity.ok(userService.getAllQuizResponsesOfUser(userId));
+    }
+
+    @PatchMapping("/me/password")
+    public ResponseEntity<Void> updatePassword(@RequestBody UpdatePasswordDTO updatePasswordDTO) {
+        JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        authService.updatePassword(updatePasswordDTO, vo.getUserID());
+        return ResponseEntity.noContent().build();
     }
 }

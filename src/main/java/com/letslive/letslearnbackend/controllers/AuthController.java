@@ -3,7 +3,6 @@ package com.letslive.letslearnbackend.controllers;
 import com.letslive.letslearnbackend.dto.AuthRequestDTO;
 import com.letslive.letslearnbackend.dto.SignUpRequestDTO;
 import com.letslive.letslearnbackend.dto.SuccessResponseDTO;
-import com.letslive.letslearnbackend.entities.User;
 import com.letslive.letslearnbackend.security.SecurityUtils;
 import com.letslive.letslearnbackend.services.AuthService;
 import com.letslive.letslearnbackend.services.RefreshTokenService;
@@ -24,14 +23,12 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<SuccessResponseDTO> registerUser(@RequestBody @Valid SignUpRequestDTO request) {
         authService.register(request);
-
         return ResponseEntity.ok(new SuccessResponseDTO("Successfully registered"));
     }
 
     @PostMapping("/login")
     public ResponseEntity<SuccessResponseDTO> loginUser(@RequestBody @Valid AuthRequestDTO request) {
-        User user = authService.login(request);
-
+        authService.login(request);
         return ResponseEntity.ok(new SuccessResponseDTO("Successfully logged in"));
     }
 

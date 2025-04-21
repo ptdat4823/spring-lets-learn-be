@@ -1,12 +1,10 @@
 package com.letslive.letslearnbackend.dto;
 
-import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,6 +28,8 @@ public class UserDTO {
     private String username;
 
     private String role;
+
+    private String avatar;
 
     private String isVerified;
 

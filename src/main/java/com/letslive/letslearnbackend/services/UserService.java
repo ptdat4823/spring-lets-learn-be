@@ -143,4 +143,13 @@ public class UserService {
 
         return result;
     }
+
+
+    public UserDTO updateUserById(UpdateUserDTO body, UUID userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
+        user.setUsername(body.getUsername());
+        user.setAvatar(body.getAvatar());
+        userRepository.save(user);
+        return UserMapper.mapToDTO(user);
+    }
 }
