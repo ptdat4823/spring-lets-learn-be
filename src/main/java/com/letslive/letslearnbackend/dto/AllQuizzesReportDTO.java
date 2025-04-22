@@ -15,7 +15,6 @@ public class AllQuizzesReportDTO {
     private Double completionPercentage;
     private Double avgMark;
     private Map<String, Double> questionTypeByPercentage;
-    private List<SingleQuizReportDTO.ScoreByPercentage> scoreByPercentage;
 
     private List<SingleQuizReportDTO> singleQuizReports;
 }

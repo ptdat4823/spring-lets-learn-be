@@ -12,6 +12,7 @@ import com.letslive.letslearnbackend.entities.*;
 import com.letslive.letslearnbackend.exception.CustomException;
 import com.letslive.letslearnbackend.mappers.TopicMapper;
 import com.letslive.letslearnbackend.repositories.*;
+import com.letslive.letslearnbackend.utils.TimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,8 @@ public class TopicService {
     private final TopicPageRepository topicPageRepository;
     private final QuizResponseService quizResponseService;
     private final CourseRepository courseRepository;
+    private final UserRepository userRepository;
+    private final EnrollmentDetailRepository enrollmentDetailRepository;
 
     ObjectMapper mapper = new ObjectMapper()
             .registerModule(new ParameterNamesModule())
@@ -346,80 +349,64 @@ public class TopicService {
         Topic topic = topicRepository.findById(topicId).orElseThrow(() -> new CustomException("No topic found!", HttpStatus.NOT_FOUND));
         SingleQuizReportDTO reportDTO = new SingleQuizReportDTO();
 
-        switch (topic.getType()) {
-            case "quiz":
-                TopicQuiz topicQuiz = topicQuizRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No topic quiz found!", HttpStatus.NOT_FOUND));
-                List<QuizResponseDTO> quizResponses = quizResponseService.getAllQuizResponsesByTopicId(topicQuiz.getTopicId());
+        TopicQuiz topicQuiz = topicQuizRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No topic quiz found!", HttpStatus.NOT_FOUND));
+        List<QuizResponseDTO> quizResponses = quizResponseService.getAllQuizResponsesByTopicId(topicQuiz.getTopicId());
+        Integer studentCount = enrollmentDetailRepository.countByCourseIdAndJoinDateLessThanEqual(courseId, TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose()));
 
-                Map<UUID, Double> marksWithStudentId = quizResponses.stream()
-                        .flatMap(responseDTO -> responseDTO.getAnswers().stream().map(answer -> {
-                            try {
-                                Question question = mapper.readValue(answer.getQuestion(), Question.class);
-                                double normalizedMark = (answer.getMark() / question.getDefaultMark()) * 10; // Normalize to base 10
-                                return new AbstractMap.SimpleEntry<>(responseDTO.getStudent().getId(), normalizedMark);
-                            } catch (JsonProcessingException e) {
-                                throw new CustomException("Error parsing question data: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-                            }
-                        }))
-                        .collect(Collectors.groupingBy(
-                                Map.Entry::getKey, // Group by studentId
-                                Collectors.mapping(
-                                        Map.Entry::getValue, // Extract the marks
-                                        Collectors.toList() // Collect marks into a list
-                                )
-                        ))
-                        .entrySet()
-                        .stream()
-                        .collect(Collectors.toMap(
-                                Map.Entry::getKey, // Keep the studentId as the key
-                                entry -> calculateMark(entry.getValue(), topicQuiz.getGradingMethod()) // Calculate the grade based on the method
-                        ));
+        Map<UUID, Double> marksWithStudentId = quizResponses.stream()
+                .flatMap(responseDTO -> responseDTO.getAnswers().stream().map(answer -> {
+                    try {
+                        Question question = mapper.readValue(answer.getQuestion(), Question.class);
+                        double normalizedMark = (answer.getMark() / question.getDefaultMark()) * 10; // Normalize to base 10
+                        return new AbstractMap.SimpleEntry<>(responseDTO.getStudent().getId(), normalizedMark);
+                    } catch (JsonProcessingException e) {
+                        throw new CustomException("Error parsing question data: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+                }))
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getKey, // Group by studentId
+                        Collectors.mapping(
+                                Map.Entry::getValue, // Extract the marks
+                                Collectors.toList() // Collect marks into a list
+                        )
+                ))
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey, // Keep the studentId as the key
+                        entry -> calculateMark(entry.getValue(), topicQuiz.getGradingMethod()) // Calculate the grade based on the method
+                ));
 
-                double avgMark = marksWithStudentId.values().stream()
-                        .mapToDouble(Double::doubleValue)
-                        .average()
-                        .orElse(0.0); // Default to 0.0 if no marks exist
+        double avgMark = marksWithStudentId.values().stream()
+                .mapToDouble(Double::doubleValue)
+                .average()
+                .orElse(0.0); // Default to 0.0 if no marks exist
 
-                double topMark = marksWithStudentId.values().stream()
-                        .mapToDouble(Double::doubleValue)
-                        .max()
-                        .orElse(0.0); // Default to 0.0 if no marks exist
+        double maxMark = marksWithStudentId.values().stream()
+                .mapToDouble(Double::doubleValue)
+                .max()
+                .orElse(0.0); // Default to 0.0 if no marks exist
 
-                // calculate the score with percentage
-                List<SingleQuizReportDTO.ScoreByPercentage> scorePercentages = quizResponseService.getAllQuizResponsesByTopicId(topicQuiz.getTopicId()).stream()
-                        .flatMap(responseDTO -> responseDTO.getAnswers().stream())
-                        .map(answer -> {
-                            try {
-                                Question question = mapper.readValue(answer.getQuestion(), Question.class);
-                                return (answer.getMark() / question.getDefaultMark()) * 10; // Normalize to base 10
-                            } catch (JsonProcessingException e) {
-                                throw new CustomException("Error parsing question data: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-                            }
-                        })
-                        .collect(Collectors.groupingBy(score -> score, Collectors.counting())) // Group by score and count occurrences
-                        .entrySet()
-                        .stream()
-                        .map(entry -> {
-                            double score = entry.getKey();
-                            double percentage = (entry.getValue() * 100.0) /
-                                    quizResponseService.getAllQuizResponsesByTopicId(topicQuiz.getTopicId()).size();
-                            return new SingleQuizReportDTO.ScoreByPercentage(score, percentage);
-                        })
-                        .toList();
+        double minMark = marksWithStudentId.values().stream()
+                .mapToDouble(Double::doubleValue)
+                .min()
+                .orElse(0.0); // Default to 0.0 if no marks exist
 
-                reportDTO.setQuestionCount(topicQuiz.getQuestions().size());
-                reportDTO.setAvgMark(avgMark);
-                reportDTO.setTopMark(topMark);
-                reportDTO.setCompletionRate(((double)marksWithStudentId.entrySet().size()) / ((double)course.getEnrollments().size()));
-                reportDTO.setStudentCount(course.getEnrollments().size());
-                reportDTO.setScoresByPercentage(scorePercentages);
-                reportDTO.setQuestionTypeByPercentage(calculateQuestionTypePercentage(quizResponses));
-                break;
-            case "assignment":
-                throw new CustomException("Not implemented", HttpStatus.NOT_IMPLEMENTED);
-            default:
-                throw new CustomException("Topic type not found!", HttpStatus.BAD_REQUEST);
-        }
+
+        reportDTO.setStudentWithMark(marksWithStudentId);
+        reportDTO.setMarkDistributionByPercentage(calculateScoreDistribution(marksWithStudentId, studentCount));
+        reportDTO.setQuestionCount(topicQuiz.getQuestions().size());
+        reportDTO.setMaxDefaultMark(topicQuiz.getQuestions().stream().mapToDouble(TopicQuizQuestion::getDefaultMark).sum());
+        reportDTO.setAvgStudentMarkBase10(avgMark);
+        reportDTO.setMaxStudentMarkBase10(maxMark);
+        reportDTO.setMinStudentMarkBase10(minMark);
+        reportDTO.setAttemptCount(quizResponses.size());
+        reportDTO.setAvgTimeSpend(calculateAvgTimeSpend(quizResponses));
+        reportDTO.setCompletionRate(((double)marksWithStudentId.entrySet().size()) / ((double)studentCount));
+        reportDTO.setStudentCount(studentCount);
+        reportDTO.setTrueFalseQuestionCount(countQuestionType(quizResponses, "True/False"));
+        reportDTO.setMultipleChoiceQuestionCount(countQuestionType(quizResponses, "Choices Answer"));
+        reportDTO.setShortAnswerQuestionCount(countQuestionType(quizResponses, "Short Answer"));
 
         return reportDTO;
     }
@@ -434,31 +421,46 @@ public class TopicService {
         };
     }
 
-    private Map<String, Double> calculateQuestionTypePercentage(List<QuizResponseDTO> quizResponses) {
-        Map<String, Long> questionTypeCounts = quizResponses.stream()
+    private double calculateAvgTimeSpend(List<QuizResponseDTO> quizResponses) {
+        return quizResponses
+                .stream()
+                .mapToDouble(res -> (TimeUtils.convertStringToLocalDateTime(res.getCompletedAt()).getSecond() - TimeUtils.convertStringToLocalDateTime(res.getStartedAt()).getSecond()))
+                .average()
+                .orElse(0.0);
+    }
+
+    private Number countQuestionType(List<QuizResponseDTO> quizResponses, String questionType) {
+        return quizResponses.stream()
                 .flatMap(responseDTO -> responseDTO.getAnswers().stream())
-                .map(answer -> {
+                .mapToInt(answer -> {
                     try {
                         Question question = mapper.readValue(answer.getQuestion(), Question.class);
-                        return question.getType(); // Assuming `getType()` returns the type of the question
+                        return question.getType().equals(questionType) ? 1 : 0;
                     } catch (JsonProcessingException e) {
                         throw new CustomException("Error parsing question data: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
                     }
                 })
-                .collect(Collectors.groupingBy(type -> type, Collectors.counting())); // Group by type and count occurrences
-
-        // Calculate the total number of questions
-        long totalQuestions = questionTypeCounts.values().stream()
-                .mapToLong(Long::longValue)
                 .sum();
+    }
 
-        // Calculate percentage for each type
-        // Keep the type as the key
-        // Calculate percentage
-        return questionTypeCounts.entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey, // Keep the type as the key
-                        entry -> (entry.getValue() * 100.0) / totalQuestions // Calculate percentage
-                ));
+    public Map<Number, Double> calculateScoreDistribution(Map<UUID, Double> studentsWithMark, int studentCount) {
+        List<Double> allMarks = studentsWithMark.values().stream().toList();
+
+        // Count how many marks fall into each range
+        long count8OrMore = allMarks.stream().filter(mark -> mark >= 8).count();
+        long count5To7 = allMarks.stream().filter(mark -> mark >= 5 && mark < 8).count();
+        long count2To4 = allMarks.stream().filter(mark -> mark >= 2 && mark < 5).count();
+        long count0To1 = allMarks.stream().filter(mark -> mark >= 0 && mark < 2).count();
+
+        Map<Number, Double> percentageMap = new HashMap<>();
+
+        // Calculate the percentage for each range
+        percentageMap.put(8, (count8OrMore * 100.0) / studentCount);
+        percentageMap.put(5, (count5To7 * 100.0) / studentCount);
+        percentageMap.put(2, (count2To4 * 100.0) / studentCount);
+        percentageMap.put(0, (count0To1 * 100.0) / studentCount);
+        percentageMap.put(-1, (((long)studentCount - count0To1 - count2To4 - count5To7 - count8OrMore) * 100.0) / studentCount);
+
+        return percentageMap;
     }
 }
