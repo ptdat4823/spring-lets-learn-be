@@ -418,7 +418,7 @@ public class TopicService {
                 throw new CustomException("Topic type not found!", HttpStatus.BAD_REQUEST);
         }
 
-        return null;
+        return reportDTO;
     }
 
     private double calculateMark(List<Double> marks, String method) {
