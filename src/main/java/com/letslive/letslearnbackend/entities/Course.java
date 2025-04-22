@@ -1,5 +1,6 @@
 package com.letslive.letslearnbackend.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -42,5 +43,6 @@ public class Course {
     private List<Section> sections;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+    @JsonBackReference
     private List<EnrollmentDetail> enrollments = new ArrayList<>();
 }

@@ -1,5 +1,8 @@
 package com.letslive.letslearnbackend.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -20,26 +23,36 @@ import java.util.UUID;
 public class User {
     @Id
     @GeneratedValue(generator = "UUID")
+    @JsonProperty
     private UUID id;
 
     @Column(unique = true, nullable = false)
+    @JsonProperty
     @CreationTimestamp
     private String createdAt;
     
     @Column(length = 20, nullable = false)
+    @JsonProperty
     private String username;
     
     @Column(unique = true, nullable = false)
+    @JsonProperty
     private String email;
-    
+
+    @JsonIgnore
     private String passwordHash;
 
+    @JsonProperty
     private String avatar;
 
+    @JsonProperty
     @ColumnDefault("false")
     private Boolean isVerified;
+
+    @JsonProperty
     private String role;
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
+    @JsonBackReference
     private List<EnrollmentDetail> enrollmentDetails = new ArrayList<>();
 }

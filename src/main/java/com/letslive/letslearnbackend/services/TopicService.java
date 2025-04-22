@@ -351,7 +351,7 @@ public class TopicService {
 
         TopicQuiz topicQuiz = topicQuizRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No topic quiz found!", HttpStatus.NOT_FOUND));
         List<QuizResponseDTO> quizResponses = quizResponseService.getAllQuizResponsesByTopicId(topicQuiz.getTopicId());
-        Integer studentCount = enrollmentDetailRepository.countByCourseIdAndJoinDateLessThanEqual(courseId, TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose()));
+        int studentCount = enrollmentDetailRepository.countByCourseIdAndJoinDateLessThanEqual(courseId, TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose()));
 
         Map<UUID, Double> marksWithStudentId = quizResponses.stream()
                 .flatMap(responseDTO -> responseDTO.getAnswers().stream().map(answer -> {

@@ -106,7 +106,7 @@ public class CourseService {
         EnrollmentDetail enrollmentDetail = new EnrollmentDetail();
         enrollmentDetail.setCourse(course);
         enrollmentDetail.setStudent(user);
-        course.setTotalJoined(course.getTotalJoined() + 1);
+        course.setTotalJoined(course.getTotalJoined() == null ? 1 : course.getTotalJoined() + 1);
 
         courseRepository.save(course);
         enrollmentDetailRepository.save(enrollmentDetail);

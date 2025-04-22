@@ -1,5 +1,6 @@
 package com.letslive.letslearnbackend.entities;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,21 +20,39 @@ import java.util.UUID;
 public class Question {
     @Id
     @GeneratedValue(generator = "UUID")
+    @JsonProperty
     private UUID id;
-    
+
+    @JsonProperty
     private LocalDateTime createdAt;
+
+    @JsonProperty
     private LocalDateTime updatedAt;
+
+    @JsonProperty
     private LocalDateTime deletedAt;
 
+
+    @JsonProperty
     private String questionName;
+
+    @JsonProperty
     private String questionText;
+    @JsonProperty
     private String status;
+    @JsonProperty
     private String type;
+    @JsonProperty
     private Double defaultMark;
+    @JsonProperty
     private Long usage;
+    @JsonProperty
     private String feedbackOfTrue;
+    @JsonProperty
     private String feedbackOfFalse;
+    @JsonProperty
     private boolean correctAnswer; // for true false question
+    @JsonProperty
     private boolean multiple; // for multiple choices questions
 
     @OneToMany
