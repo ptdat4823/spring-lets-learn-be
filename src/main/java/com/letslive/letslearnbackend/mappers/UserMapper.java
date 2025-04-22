@@ -1,6 +1,7 @@
 package com.letslive.letslearnbackend.mappers;
 
 import com.letslive.letslearnbackend.dto.UserDTO;
+import com.letslive.letslearnbackend.entities.EnrollmentDetail;
 import com.letslive.letslearnbackend.entities.User;
 
 public class UserMapper {
@@ -24,10 +25,10 @@ public class UserMapper {
                 .avatar(user.getAvatar())
                 .role(user.getRole());
 
-        if (user.getCourses() != null) {
+        if (user.getEnrollmentDetails() != null) {
             // avoid stackoverflow
-            user.getCourses().forEach(course -> course.setStudents(null));
-            builder.courses(user.getCourses().stream().map(CourseMapper::mapToDTO).toList());
+//            user.getCourses().forEach(course -> course.setStudents(null));
+            builder.courses(user.getEnrollmentDetails().stream().map(EnrollmentDetail::getCourse).map(CourseMapper::mapToDTO).toList());
         }
 
         return builder.build();

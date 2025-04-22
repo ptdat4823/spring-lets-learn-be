@@ -6,10 +6,7 @@ import com.letslive.letslearnbackend.dto.AllQuizzesReportDTO;
 import com.letslive.letslearnbackend.dto.CourseDTO;
 import com.letslive.letslearnbackend.dto.SingleQuizReportDTO;
 import com.letslive.letslearnbackend.dto.TopicDTO;
-import com.letslive.letslearnbackend.entities.AssignmentResponse;
-import com.letslive.letslearnbackend.entities.Course;
-import com.letslive.letslearnbackend.entities.QuizResponse;
-import com.letslive.letslearnbackend.entities.User;
+import com.letslive.letslearnbackend.entities.*;
 import com.letslive.letslearnbackend.exception.CustomException;
 import com.letslive.letslearnbackend.mappers.CourseMapper;
 import com.letslive.letslearnbackend.mappers.TopicMapper;
@@ -35,6 +32,7 @@ public class CourseService {
     private final QuizResponseRepository quizResponseRepository;
     private final AssignmentResponseRepository assignmentResponseRepository;
     private final TopicService topicService;
+    private final EnrollmentDetailRepository enrollmentDetailRepository;
 
     // get course DOES NOT have the topic data with it, must populate it manually
     private CourseDTO getCourseWithTopicData(UUID courseId) {
@@ -101,16 +99,17 @@ public class CourseService {
         User user = userRepository.findById(userId).orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
         Course course = courseRepository.findById(id).orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
 
-        if (course.getStudents().stream().anyMatch((student) -> student.getId().equals(userId))) {
-            throw new CustomException("User already has this course", HttpStatus.CONFLICT);
-        };
+        if (enrollmentDetailRepository.existsByStudentIdAndCourseId(userId, course.getId())) {
+            throw new CustomException("User is already enrolled to this course", HttpStatus.BAD_REQUEST);
+        }
 
-        user.getCourses().add(course);
-        course.getStudents().add(user);
+        EnrollmentDetail enrollmentDetail = new EnrollmentDetail();
+        enrollmentDetail.setCourse(course);
+        enrollmentDetail.setStudent(user);
         course.setTotalJoined(course.getTotalJoined() + 1);
 
         courseRepository.save(course);
-        userRepository.save(user);
+        enrollmentDetailRepository.save(enrollmentDetail);
     }
 
     public List<TopicDTO> getAllWorksOfCourseAndUser(UUID courseId, UUID userId, String type, LocalDateTime start, LocalDateTime end) {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.letslive.letslearnbackend.dto.*;
 import com.letslive.letslearnbackend.entities.AssignmentResponse;
+import com.letslive.letslearnbackend.entities.EnrollmentDetail;
 import com.letslive.letslearnbackend.entities.QuizResponse;
 import com.letslive.letslearnbackend.entities.User;
 import com.letslive.letslearnbackend.exception.CustomException;
@@ -54,7 +55,7 @@ public class UserService {
                 .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
         List<TopicDTO> result = new ArrayList<>();
 
-        user.getCourses().forEach(course -> {
+        user.getEnrollmentDetails().stream().map(EnrollmentDetail::getCourse).forEach(course -> {
             course.getSections().forEach(courseSection -> {
                 courseSection.getTopics().forEach(topicSection -> {
                     if (type == null || type.isEmpty() || type.equals(topicSection.getType())) {

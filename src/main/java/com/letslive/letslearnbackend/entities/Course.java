@@ -1,6 +1,5 @@
 package com.letslive.letslearnbackend.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -42,7 +41,6 @@ public class Course {
     @JoinColumn(name = "course_id", referencedColumnName = "id")
     private List<Section> sections;
 
-    @ManyToMany(mappedBy = "courses")
-    @JsonIgnore
-    private List<User> students = new ArrayList<>();
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+    private List<EnrollmentDetail> enrollments = new ArrayList<>();
 }

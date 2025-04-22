@@ -410,8 +410,8 @@ public class TopicService {
                 reportDTO.setQuestionCount(topicQuiz.getQuestions().size());
                 reportDTO.setAvgMark(avgMark);
                 reportDTO.setTopMark(topMark);
-                reportDTO.setCompletionRate(((double)marksWithStudentId.entrySet().size()) / ((double)course.getStudents().size()));
-                reportDTO.setStudentCount(course.getStudents().size());
+                reportDTO.setCompletionRate(((double)marksWithStudentId.entrySet().size()) / ((double)course.getEnrollments().size()));
+                reportDTO.setStudentCount(course.getEnrollments().size());
                 reportDTO.setScoresByPercentage(scorePercentages);
                 reportDTO.setQuestionTypeByPercentage(calculateQuestionTypePercentage(quizResponses));
                 break;
