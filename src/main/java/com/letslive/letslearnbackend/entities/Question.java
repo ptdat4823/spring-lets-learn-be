@@ -6,10 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -31,7 +29,7 @@ public class Question {
     private String questionText;
     private String status;
     private String type;
-    private BigDecimal defaultMark;
+    private Double defaultMark;
     private Long usage;
     private String feedbackOfTrue;
     private String feedbackOfFalse;

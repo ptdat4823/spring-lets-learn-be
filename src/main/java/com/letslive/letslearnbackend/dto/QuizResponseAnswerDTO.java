@@ -14,5 +14,5 @@ public class QuizResponseAnswerDTO {
     private UUID quizResponseId; // no need for uploading
     private String question; // question data as JSON
     private String answer;
-    private int mark;
+    private Double mark;
 }

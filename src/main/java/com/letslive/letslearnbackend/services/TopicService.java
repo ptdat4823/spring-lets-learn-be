@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import com.letslive.letslearnbackend.dto.SingleQuizReportDTO;
 import com.letslive.letslearnbackend.dto.TopicDTO;
 import com.letslive.letslearnbackend.entities.*;
 import com.letslive.letslearnbackend.exception.CustomException;
@@ -14,9 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +32,8 @@ public class TopicService {
     private final TopicFileRepository topicFileRepository;
     private final TopicLinkRepository topicLinkRepository;
     private final TopicPageRepository topicPageRepository;
+    private final QuizResponseService quizResponseService;
+    private final CourseRepository courseRepository;
 
     ObjectMapper mapper = new ObjectMapper()
             .registerModule(new ParameterNamesModule())
@@ -336,5 +338,96 @@ public class TopicService {
         createdTopicDTO.setResponse(studentResponseData);
 
         return createdTopicDTO;
+    }
+
+    public SingleQuizReportDTO getSingleQuizReport(UUID courseId, UUID id) {
+        Course course = courseRepository.findById(courseId).orElseThrow(() -> new CustomException("No course found", HttpStatus.NOT_FOUND));
+        Topic topic = topicRepository.findById(id).orElseThrow(() -> new CustomException("No topic found!", HttpStatus.NOT_FOUND));
+        SingleQuizReportDTO reportDTO = new SingleQuizReportDTO();
+
+        switch (topic.getType()) {
+            case "quiz":
+                TopicQuiz topicQuiz = topicQuizRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No topic quiz found!", HttpStatus.NOT_FOUND));
+
+                Map<UUID, Double> marksWithStudentId = quizResponseService.getAllQuizResponsesByTopicId(topicQuiz.getTopicId()).stream()
+                        .flatMap(responseDTO -> responseDTO.getAnswers().stream().map(answer -> {
+                            try {
+                                Question question = mapper.readValue(answer.getQuestion(), Question.class);
+                                double normalizedMark = (answer.getMark() / question.getDefaultMark()) * 10; // Normalize to base 10
+                                return new AbstractMap.SimpleEntry<>(responseDTO.getStudent().getId(), normalizedMark);
+                            } catch (JsonProcessingException e) {
+                                throw new CustomException("Error parsing question data: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+                            }
+                        }))
+                        .collect(Collectors.groupingBy(
+                                Map.Entry::getKey, // Group by studentId
+                                Collectors.mapping(
+                                        Map.Entry::getValue, // Extract the marks
+                                        Collectors.toList() // Collect marks into a list
+                                )
+                        ))
+                        .entrySet()
+                        .stream()
+                        .collect(Collectors.toMap(
+                                entry -> entry.getKey(), // Keep the studentId as the key
+                                entry -> calculateMark(entry.getValue(), topicQuiz.getGradingMethod()) // Calculate the grade based on the method
+                        ));
+
+                double avgMark = marksWithStudentId.values().stream()
+                        .mapToDouble(Double::doubleValue)
+                        .average()
+                        .orElse(0.0); // Default to 0.0 if no marks exist
+
+                double topMark = marksWithStudentId.values().stream()
+                        .mapToDouble(Double::doubleValue)
+                        .max()
+                        .orElse(0.0); // Default to 0.0 if no marks exist
+
+                // calculate the score with percentage
+                List<SingleQuizReportDTO.ScoreByPercentage> scorePercentages = quizResponseService.getAllQuizResponsesByTopicId(topicQuiz.getTopicId()).stream()
+                        .flatMap(responseDTO -> responseDTO.getAnswers().stream())
+                        .map(answer -> {
+                            try {
+                                Question question = mapper.readValue(answer.getQuestion(), Question.class);
+                                return (answer.getMark() / question.getDefaultMark()) * 10; // Normalize to base 10
+                            } catch (JsonProcessingException e) {
+                                throw new CustomException("Error parsing question data: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+                            }
+                        })
+                        .collect(Collectors.groupingBy(score -> score, Collectors.counting())) // Group by score and count occurrences
+                        .entrySet()
+                        .stream()
+                        .map(entry -> {
+                            double score = entry.getKey();
+                            double percentage = (entry.getValue() * 100.0) /
+                                    quizResponseService.getAllQuizResponsesByTopicId(topicQuiz.getTopicId()).size();
+                            return new SingleQuizReportDTO.ScoreByPercentage(score, percentage);
+                        })
+                        .toList();
+
+                reportDTO.setQuestionCount(topicQuiz.getQuestions().size());
+                reportDTO.setAvgMark(avgMark);
+                reportDTO.setTopMark(topMark);
+                reportDTO.setCompletionRate(((double)marksWithStudentId.entrySet().size()) / ((double)course.getStudents().size()));
+                reportDTO.setStudentCount((double)course.getStudents().size());
+                reportDTO.setScoresByPercentage(scorePercentages);
+                break;
+            case "assignment":
+                throw new CustomException("Not implemented", HttpStatus.NOT_IMPLEMENTED);
+            default:
+                throw new CustomException("Topic type not found!", HttpStatus.BAD_REQUEST);
+        }
+
+        return null;
+    }
+
+    private double calculateMark(List<Double> marks, String method) {
+        return switch (method) {
+            case "Highest Grade" -> marks.stream().max(Double::compare).orElse(0.0);
+            case "Average Grade" -> marks.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+            case "First Grade" -> marks.isEmpty() ? 0.0 : marks.get(0);
+            case "Last Grade" -> marks.isEmpty() ? 0.0 : marks.get(marks.size() - 1);
+            default -> throw new IllegalArgumentException("Invalid method: " + method);
+        };
     }
 }
