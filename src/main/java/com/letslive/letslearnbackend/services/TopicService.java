@@ -303,6 +303,30 @@ public class TopicService {
                     throw new CustomException("Error parsing meeting data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
                 }
                 break;
+            case "file":
+                TopicFile topicFile = topicFileRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No file found!", HttpStatus.NOT_FOUND));
+                try {
+                    topicData = mapper.writeValueAsString(topicFile);
+                } catch (JsonProcessingException e) {
+                    throw new CustomException("Error parsing file data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+                }
+                break;
+            case "link":
+                TopicLink topicLink = topicLinkRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No file found!", HttpStatus.NOT_FOUND));
+                try {
+                    topicData = mapper.writeValueAsString(topicLink);
+                } catch (JsonProcessingException e) {
+                    throw new CustomException("Error parsing link data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+                }
+                break;
+            case "page":
+                TopicPage topicPage = topicPageRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No page found!", HttpStatus.NOT_FOUND));
+                try {
+                    topicData = mapper.writeValueAsString(topicPage);
+                } catch (JsonProcessingException e) {
+                    throw new CustomException("Error parsing page data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+                }
+                break;
             default:
                 throw new CustomException("Topic type not found!", HttpStatus.BAD_REQUEST);
         }
