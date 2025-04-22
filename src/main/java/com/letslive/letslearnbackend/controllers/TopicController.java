@@ -54,6 +54,6 @@ public class TopicController {
     @GetMapping("/{id}/report")
     public ResponseEntity<SingleQuizReportDTO> getTopicById(@PathVariable UUID id, @RequestParam UUID courseId) {
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-        return ResponseEntity.ok(topicService.getSingleQuizReport(id, vo.getUserID()));
+        return ResponseEntity.ok(topicService.getSingleQuizReport(courseId, id));
     }
 }
