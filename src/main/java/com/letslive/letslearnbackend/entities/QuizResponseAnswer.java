@@ -26,5 +26,5 @@ public class QuizResponseAnswer {
 
     private String answer;
 
-    private int mark;
+    private Double mark;
 }

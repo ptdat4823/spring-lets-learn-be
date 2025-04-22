@@ -1,5 +1,6 @@
 package com.letslive.letslearnbackend.controllers;
 
+import com.letslive.letslearnbackend.dto.AllQuizzesReportDTO;
 import com.letslive.letslearnbackend.dto.CourseDTO;
 import com.letslive.letslearnbackend.dto.TopicDTO;
 import com.letslive.letslearnbackend.dto.UserDTO;
@@ -75,5 +76,10 @@ public class CourseController {
         UserDTO user = userService.findUserById(vo.getUserID());
         courseService.addUserToCourse(id, user.getId());
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping(value = "/{courseId}/quiz-report")
+    public ResponseEntity<AllQuizzesReportDTO> getAllQuizzesReport(@PathVariable UUID courseId) {
+        return ResponseEntity.ok(courseService.getQuizzesReport(courseId));
     }
 }

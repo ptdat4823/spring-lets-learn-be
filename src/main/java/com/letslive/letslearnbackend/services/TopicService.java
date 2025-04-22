@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import com.letslive.letslearnbackend.dto.QuizResponseDTO;
 import com.letslive.letslearnbackend.dto.SingleQuizReportDTO;
 import com.letslive.letslearnbackend.dto.TopicDTO;
 import com.letslive.letslearnbackend.entities.*;
@@ -340,16 +341,17 @@ public class TopicService {
         return createdTopicDTO;
     }
 
-    public SingleQuizReportDTO getSingleQuizReport(UUID courseId, UUID id) {
+    public SingleQuizReportDTO getSingleQuizReport(UUID courseId, UUID topicId) {
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new CustomException("No course found", HttpStatus.NOT_FOUND));
-        Topic topic = topicRepository.findById(id).orElseThrow(() -> new CustomException("No topic found!", HttpStatus.NOT_FOUND));
+        Topic topic = topicRepository.findById(topicId).orElseThrow(() -> new CustomException("No topic found!", HttpStatus.NOT_FOUND));
         SingleQuizReportDTO reportDTO = new SingleQuizReportDTO();
 
         switch (topic.getType()) {
             case "quiz":
                 TopicQuiz topicQuiz = topicQuizRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No topic quiz found!", HttpStatus.NOT_FOUND));
+                List<QuizResponseDTO> quizResponses = quizResponseService.getAllQuizResponsesByTopicId(topicQuiz.getTopicId());
 
-                Map<UUID, Double> marksWithStudentId = quizResponseService.getAllQuizResponsesByTopicId(topicQuiz.getTopicId()).stream()
+                Map<UUID, Double> marksWithStudentId = quizResponses.stream()
                         .flatMap(responseDTO -> responseDTO.getAnswers().stream().map(answer -> {
                             try {
                                 Question question = mapper.readValue(answer.getQuestion(), Question.class);
@@ -369,7 +371,7 @@ public class TopicService {
                         .entrySet()
                         .stream()
                         .collect(Collectors.toMap(
-                                entry -> entry.getKey(), // Keep the studentId as the key
+                                Map.Entry::getKey, // Keep the studentId as the key
                                 entry -> calculateMark(entry.getValue(), topicQuiz.getGradingMethod()) // Calculate the grade based on the method
                         ));
 
@@ -409,8 +411,9 @@ public class TopicService {
                 reportDTO.setAvgMark(avgMark);
                 reportDTO.setTopMark(topMark);
                 reportDTO.setCompletionRate(((double)marksWithStudentId.entrySet().size()) / ((double)course.getStudents().size()));
-                reportDTO.setStudentCount((double)course.getStudents().size());
+                reportDTO.setStudentCount(course.getStudents().size());
                 reportDTO.setScoresByPercentage(scorePercentages);
+                reportDTO.setQuestionTypeByPercentage(calculateQuestionTypePercentage(quizResponses));
                 break;
             case "assignment":
                 throw new CustomException("Not implemented", HttpStatus.NOT_IMPLEMENTED);
@@ -429,5 +432,33 @@ public class TopicService {
             case "Last Grade" -> marks.isEmpty() ? 0.0 : marks.get(marks.size() - 1);
             default -> throw new IllegalArgumentException("Invalid method: " + method);
         };
+    }
+
+    private Map<String, Double> calculateQuestionTypePercentage(List<QuizResponseDTO> quizResponses) {
+        Map<String, Long> questionTypeCounts = quizResponses.stream()
+                .flatMap(responseDTO -> responseDTO.getAnswers().stream())
+                .map(answer -> {
+                    try {
+                        Question question = mapper.readValue(answer.getQuestion(), Question.class);
+                        return question.getType(); // Assuming `getType()` returns the type of the question
+                    } catch (JsonProcessingException e) {
+                        throw new CustomException("Error parsing question data: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+                })
+                .collect(Collectors.groupingBy(type -> type, Collectors.counting())); // Group by type and count occurrences
+
+        // Calculate the total number of questions
+        long totalQuestions = questionTypeCounts.values().stream()
+                .mapToLong(Long::longValue)
+                .sum();
+
+        // Calculate percentage for each type
+        // Keep the type as the key
+        // Calculate percentage
+        return questionTypeCounts.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey, // Keep the type as the key
+                        entry -> (entry.getValue() * 100.0) / totalQuestions // Calculate percentage
+                ));
     }
 }

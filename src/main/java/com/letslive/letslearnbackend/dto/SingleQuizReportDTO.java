@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -23,4 +24,5 @@ public class SingleQuizReportDTO {
     private Double completionRate;
     private Number studentCount;
     private List<ScoreByPercentage> scoresByPercentage;
+    private Map<String, Double> questionTypeByPercentage;
 }
