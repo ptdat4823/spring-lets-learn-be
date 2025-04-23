@@ -26,7 +26,7 @@ public class CourseMapper {
 
         if (course.getEnrollments() != null) {
             // avoid stackoverflow
-            //course.getStudents().forEach(student -> student.setCourses(null));
+            course.getEnrollments().stream().map(EnrollmentDetail::getStudent).forEach(student -> student.setEnrollmentDetails(null));
             builder.students(course.getEnrollments().stream().map(EnrollmentDetail::getStudent).map(UserMapper::mapToDTO).toList());
         }
 
