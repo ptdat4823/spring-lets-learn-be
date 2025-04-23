@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -12,13 +11,15 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 public class SingleQuizReportDTO {
-    @JsonIgnore // this one is for the all quizzes calculation
-    private Map<UUID, Double> studentWithMark = new HashMap<>();
-    private Map<Number, Double> markDistributionByPercentage = new HashMap<>();
+    private String name;
+    @JsonIgnore // the two below are for the all quizzes calculation
+    private Map<UUID, Double> studentWithMark;
+    private Double maxDefaultMark;
+
+    private Map<Number, Double> markDistributionByPercentage;
 
     private Number questionCount;
 
-    private Double maxDefaultMark;
     private Double avgStudentMarkBase10;
     private Double maxStudentMarkBase10;
     private Double minStudentMarkBase10;

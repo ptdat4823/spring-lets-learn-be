@@ -4,7 +4,6 @@ import com.letslive.letslearnbackend.dto.AllQuizzesReportDTO;
 import com.letslive.letslearnbackend.dto.CourseDTO;
 import com.letslive.letslearnbackend.dto.TopicDTO;
 import com.letslive.letslearnbackend.dto.UserDTO;
-import com.letslive.letslearnbackend.exception.CustomException;
 import com.letslive.letslearnbackend.mappers.UserMapper;
 import com.letslive.letslearnbackend.security.JwtTokenVo;
 import com.letslive.letslearnbackend.security.SecurityUtils;
@@ -80,8 +79,11 @@ public class CourseController {
     }
 
     @GetMapping(value = "/{courseId}/quiz-report")
-    public ResponseEntity<AllQuizzesReportDTO> getAllQuizzesReport(@PathVariable UUID courseId) {
-//        return ResponseEntity.ok(courseService.getQuizzesReport(courseId));
-        throw new CustomException("Not implemented", HttpStatus.NOT_IMPLEMENTED);
+    public ResponseEntity<AllQuizzesReportDTO> getAllQuizzesReport(
+            @PathVariable UUID courseId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime
+    ) {
+        return ResponseEntity.ok(courseService.getQuizzesReport(courseId, startTime, endTime));
     }
 }

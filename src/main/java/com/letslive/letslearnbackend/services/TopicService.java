@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -345,13 +346,13 @@ public class TopicService {
     }
 
     public SingleQuizReportDTO getSingleQuizReport(UUID courseId, UUID topicId) {
-        Course course = courseRepository.findById(courseId).orElseThrow(() -> new CustomException("No course found", HttpStatus.NOT_FOUND));
         Topic topic = topicRepository.findById(topicId).orElseThrow(() -> new CustomException("No topic found!", HttpStatus.NOT_FOUND));
         SingleQuizReportDTO reportDTO = new SingleQuizReportDTO();
 
         TopicQuiz topicQuiz = topicQuizRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No topic quiz found!", HttpStatus.NOT_FOUND));
         List<QuizResponseDTO> quizResponses = quizResponseService.getAllQuizResponsesByTopicId(topicQuiz.getTopicId());
-        int studentCount = enrollmentDetailRepository.countByCourseIdAndJoinDateLessThanEqual(courseId, TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose()));
+        LocalDateTime topicEndTime = topicQuiz.getClose() == null ? LocalDateTime.MAX : TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose());
+        int studentCount = enrollmentDetailRepository.countByCourseIdAndJoinDateLessThanEqual(courseId, topicEndTime);
 
         Map<UUID, Double> marksWithStudentId = quizResponses.stream()
                 .flatMap(responseDTO -> responseDTO.getAnswers().stream().map(answer -> {
@@ -393,6 +394,7 @@ public class TopicService {
                 .orElse(0.0); // Default to 0.0 if no marks exist
 
 
+        reportDTO.setName(topic.getTitle());
         reportDTO.setStudentWithMark(marksWithStudentId);
         reportDTO.setMarkDistributionByPercentage(calculateScoreDistribution(marksWithStudentId, studentCount));
         reportDTO.setQuestionCount(topicQuiz.getQuestions().size());

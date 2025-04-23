@@ -2,7 +2,9 @@ package com.letslive.letslearnbackend.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.letslive.letslearnbackend.dto.AllQuizzesReportDTO;
 import com.letslive.letslearnbackend.dto.CourseDTO;
+import com.letslive.letslearnbackend.dto.SingleQuizReportDTO;
 import com.letslive.letslearnbackend.dto.TopicDTO;
 import com.letslive.letslearnbackend.entities.*;
 import com.letslive.letslearnbackend.exception.CustomException;
@@ -15,10 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -205,89 +205,83 @@ public class CourseService {
         return result;
     }
 
-//    public AllQuizzesReportDTO getQuizzesReport(UUID courseId) {
-//        Course course = courseRepository.findById(courseId).orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
-//        List<SingleQuizReportDTO> singleQuizReportDTOS = new ArrayList<>();
-//
-//        course.getSections().forEach(courseSection -> {
-//            courseSection.getTopics().forEach(topicSection -> {
-//                if (topicSection.getType().equals("quiz")) {
-//                    singleQuizReportDTOS.add(topicService.getSingleQuizReport(courseId, topicSection.getId()));
-//                }
-//            });
-//        });
-//
-//        return calculateAllQuizzesReport(singleQuizReportDTOS);
-//    }
+    public AllQuizzesReportDTO getQuizzesReport(UUID courseId, LocalDateTime startTime, LocalDateTime endTime) {
+        Course course = courseRepository.findById(courseId).orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
+        List<SingleQuizReportDTO> singleQuizReportDTOs = new ArrayList<>();
 
-//    public AllQuizzesReportDTO calculateAllQuizzesReport(List<SingleQuizReportDTO> singleQuizReports) {
-//        // Quiz count
-//        int quizCount = singleQuizReports.size();
-//
-//        // Average completion percentage
-//        double completionPercentage = singleQuizReports.stream()
-//                .mapToDouble(SingleQuizReportDTO::getCompletionRate)
-//                .average()
-//                .orElse(0.0);
-//
-//        // Average mark
-//        double avgMark = singleQuizReports.stream()
-//                .mapToDouble(SingleQuizReportDTO::getAvgMark)
-//                .average()
-//                .orElse(0.0);
-//
-//        // Aggregate question types by percentage
-//        Map<String, Double> questionTypeByPercentage = singleQuizReports.stream()
-//                .flatMap(quiz -> quiz.getQuestionTypeByPercentage().entrySet().stream())
-//                .collect(Collectors.groupingBy(
-//                        Map.Entry::getKey, // Group by question type
-//                        Collectors.averagingDouble(Map.Entry::getValue) // Average percentage across quizzes
-//                ));
-//
-//        // Aggregate scores by percentage
-//        Map<Double, Double> aggregatedScores = singleQuizReports.stream()
-//                .flatMap(quiz -> quiz.getScoresByPercentage().stream())
-//                .collect(Collectors.groupingBy(
-//                        SingleQuizReportDTO.ScoreByPercentage::getScore,
-//                        Collectors.averagingDouble(SingleQuizReportDTO.ScoreByPercentage::getPercentage)
-//                ));
-//
-//        // Assemble the AllQuizzesReportDTO
-//        AllQuizzesReportDTO allQuizzesReport = new AllQuizzesReportDTO();
-//        allQuizzesReport.setQuizCount(quizCount);
-//        allQuizzesReport.setCompletionPercentage(completionPercentage);
-//        allQuizzesReport.setAvgMark(avgMark);
-//        allQuizzesReport.setQuestionTypeByPercentage(questionTypeByPercentage);
-//        allQuizzesReport.setScoreByPercentage(mergeScoresByPercentage(singleQuizReports));
-//        allQuizzesReport.setSingleQuizReports(singleQuizReports);
-//
-//        return allQuizzesReport;
-//    }
-//
-//    public List<SingleQuizReportDTO.ScoreByPercentage> mergeScoresByPercentage(List<SingleQuizReportDTO> singleQuizReports) {
-//        // Step 1: Aggregate scores with weights
-//        Map<Double, double[]> scoreAggregates = singleQuizReports.stream()
-//                .flatMap(quiz -> quiz.getScoresByPercentage().stream()
-//                        .map(scoreByPercentage -> Map.entry(
-//                                scoreByPercentage.getScore(), // Group by score (Double)
-//                                new double[]{scoreByPercentage.getPercentage(), quiz.getStudentCount().doubleValue()} // Percentage and weight
-//                        ))
-//                )
-//                .collect(Collectors.groupingBy(
-//                        Map.Entry::getKey,
-//                        Collectors.reducing(
-//                                new double[]{0.0, 0.0}, // Initial value: {percentageSum, weightSum}
-//                                Map.Entry::getValue,
-//                                (a, b) -> new double[]{a[0] + b[0] * b[1], a[1] + b[1]} // Combine percentages weighted by student count
-//                        )
-//                ));
-//
-//        // Step 2: Calculate final percentage and convert to ScoreByPercentage list
-//        return scoreAggregates.entrySet().stream()
-//                .map(entry -> new SingleQuizReportDTO.ScoreByPercentage(
-//                        entry.getKey(), // Score
-//                        entry.getValue()[1] == 0.0 ? 0.0 : (entry.getValue()[0] / entry.getValue()[1]) // Weighted average
-//                ))
-//                .collect(Collectors.toList());
-//    }
+        course.getSections().forEach(courseSection -> {
+            courseSection.getTopics().forEach(topic -> {
+                if (topic.getType().equals("quiz")) {
+                    TopicQuiz topicQuiz = topicQuizRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("Report to dev please", HttpStatus.INTERNAL_SERVER_ERROR));
+                    LocalDateTime topicStart;
+                    LocalDateTime topicEnd;
+                    if (topicQuiz.getOpen() == null) topicStart = LocalDateTime.MIN; else topicStart = TimeUtils.convertStringToLocalDateTime(topicQuiz.getOpen());
+                    if (topicQuiz.getClose() == null) topicEnd = LocalDateTime.MAX; else topicEnd = TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose());
+                    if (topicStart.isBefore(endTime) && topicEnd.isAfter(startTime)) {
+                        singleQuizReportDTOs.add(topicService.getSingleQuizReport(courseId, topic.getId()));
+                    }
+                }
+            });
+        });
+
+        AllQuizzesReportDTO reportDTO = new AllQuizzesReportDTO();
+
+        reportDTO.setQuizCount(singleQuizReportDTOs.size());
+        reportDTO.setAvgCompletionPercentage(singleQuizReportDTOs.stream().mapToDouble(SingleQuizReportDTO::getCompletionRate).average().orElse(0));
+        reportDTO.setMinQuestionCount(singleQuizReportDTOs.stream().mapToInt(rep -> (int) rep.getQuestionCount()).min().orElse(0));
+        reportDTO.setMaxQuestionCount(singleQuizReportDTOs.stream().mapToInt(rep -> (int) rep.getQuestionCount()).max().orElse(0));
+        reportDTO.setMinStudentScoreBase10(singleQuizReportDTOs.stream().mapToDouble(SingleQuizReportDTO::getMinStudentMarkBase10).min().orElse(0));
+        reportDTO.setMaxStudentScoreBase10(singleQuizReportDTOs.stream().mapToDouble(SingleQuizReportDTO::getMaxStudentMarkBase10).max().orElse(0));
+        reportDTO.setStudentMarkPercentages(calculateAverageStudentScorePercentage(singleQuizReportDTOs));
+        reportDTO.setMarkDistributionByPercentage(calculateAverageMarkDistributions(singleQuizReportDTOs.stream().map(SingleQuizReportDTO::getMarkDistributionByPercentage).toList()));
+        reportDTO.setSingleQuizReports(singleQuizReportDTOs);
+        reportDTO.setTrueFalseQuestionCount(singleQuizReportDTOs.stream().mapToInt(rep -> (int) rep.getTrueFalseQuestionCount()).sum());
+        reportDTO.setMultipleChoiceQuestionCount(singleQuizReportDTOs.stream().mapToInt(rep -> (int) rep.getMultipleChoiceQuestionCount()).sum());
+        reportDTO.setShortAnswerQuestionCount(singleQuizReportDTOs.stream().mapToInt(rep -> (int) rep.getShortAnswerQuestionCount()).sum());
+
+        return reportDTO;
+    }
+
+    public Map<UUID, Double> calculateAverageStudentScorePercentage(List<SingleQuizReportDTO> singleQuizReports) {
+        Map<UUID, List<Double>> studentScorePercentages = new HashMap<>();
+
+        // Calculate percentage scores for each quiz and collect them by student
+        for (SingleQuizReportDTO report : singleQuizReports) {
+            report.getStudentWithMark().forEach((studentId, mark) -> {
+                double percentage = (mark / report.getMaxDefaultMark()) * 100;
+                studentScorePercentages.computeIfAbsent(studentId, k -> new ArrayList<>()).add(percentage);
+            });
+        }
+
+        // Calculate average percentage for each student
+        return studentScorePercentages.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().stream()
+                                .mapToDouble(Double::doubleValue)
+                                .average()
+                                .orElse(0.0)
+                ));
+    }
+
+    public Map<Number, Double> calculateAverageMarkDistributions(List<Map<Number, Double>> markDistributions) {
+        Map<Number, List<Double>> groupedValues = new HashMap<>();
+        Number[] keys = {-1, 0, 2, 5, 8};
+
+        for (Map<Number, Double> distribution : markDistributions) {
+            for (Number key : keys) {
+                Double value = distribution.getOrDefault(key, 0.0);
+                groupedValues.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
+            }
+        }
+
+        return groupedValues.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().stream()
+                                .mapToDouble(Double::doubleValue)
+                                .average()
+                                .orElse(0.0)
+                ));
+    }
 }
