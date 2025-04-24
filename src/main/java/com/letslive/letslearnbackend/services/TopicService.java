@@ -39,6 +39,7 @@ public class TopicService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final EnrollmentDetailRepository enrollmentDetailRepository;
+    private final AssignmentResponseService assignmentResponseService;
 
     ObjectMapper mapper = new ObjectMapper()
             .registerModule(new ParameterNamesModule())
@@ -345,6 +346,49 @@ public class TopicService {
         return createdTopicDTO;
     }
 
+    public SingleAssignmentReportDTO getSingleAssignmentReport(UUID courseId, UUID topicId) {
+        Topic topic = topicRepository.findById(topicId).orElseThrow(() -> new CustomException("No topic found!", HttpStatus.NOT_FOUND));
+        TopicAssignment topicQuiz = topicAssigmentRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No topic assignment found!", HttpStatus.NOT_FOUND));
+        List<AssignmentResponse> assignmentResponses = assignmentResponseRepository.findAllByTopicId(topic.getId());
+        LocalDateTime topicEndTime = topicQuiz.getClose() == null ? LocalDateTime.MAX : TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose());
+        int studentCount = enrollmentDetailRepository.countByCourseIdAndJoinDateLessThanEqual(courseId, topicEndTime);
+
+        Map<UUID, Double> marksWithStudentId = assignmentResponses.stream()
+                .filter(res -> res.getMark() != null)
+                .collect(Collectors.toMap(
+                        res -> res.getStudent().getId(),
+                        AssignmentResponse::getMark,
+                        (existing, replacement) -> existing
+                ));
+
+        Map<String, Long> fileTypeCount = assignmentResponses.stream()
+                .filter(res -> res.getCloudinaryFiles() != null)
+                .flatMap(res -> res.getCloudinaryFiles().stream())
+                .map(file -> {
+                    int dotIndex = file.getName().lastIndexOf('.');
+                    return file.getDisplayUrl().substring(dotIndex + 1);
+                })
+                .collect(Collectors.groupingBy(
+                        ext -> ext,
+                        Collectors.counting()
+                ));
+
+        SingleAssignmentReportDTO reportDTO = new SingleAssignmentReportDTO();
+        reportDTO.setName(topic.getTitle());
+        reportDTO.setStudentMarks(marksWithStudentId);
+        reportDTO.setMarkDistributionByPercentage(calculateMarkDistribution(marksWithStudentId, studentCount));
+        reportDTO.setSubmissionCount(assignmentResponses.size());
+        reportDTO.setGradedSubmissionCount(assignmentResponses.stream().filter(res -> res.getMark() != null).count());
+        reportDTO.setFileCount(assignmentResponses.stream().mapToInt(res -> res.getCloudinaryFiles() != null ? res.getCloudinaryFiles().size() : 0).sum());
+        reportDTO.setAvgMark(assignmentResponses.stream().filter(res -> res.getMark() != null).mapToDouble(AssignmentResponse::getMark).average().orElse(0.0));
+        reportDTO.setMaxMark(assignmentResponses.stream().filter(res -> res.getMark() != null).mapToDouble(AssignmentResponse::getMark).max().orElse(0.0));
+        reportDTO.setCompletionRate((double) assignmentResponses.size() / (double) studentCount);
+        reportDTO.setStudentCount(studentCount);
+        reportDTO.setFileTypeCount(fileTypeCount);
+
+        return reportDTO;
+    }
+
     public SingleQuizReportDTO getSingleQuizReport(UUID courseId, UUID topicId) {
         Topic topic = topicRepository.findById(topicId).orElseThrow(() -> new CustomException("No topic found!", HttpStatus.NOT_FOUND));
         SingleQuizReportDTO reportDTO = new SingleQuizReportDTO();
@@ -396,7 +440,7 @@ public class TopicService {
 
         reportDTO.setName(topic.getTitle());
         reportDTO.setStudentWithMark(marksWithStudentId);
-        reportDTO.setMarkDistributionByPercentage(calculateScoreDistribution(marksWithStudentId, studentCount));
+        reportDTO.setMarkDistributionByPercentage(calculateMarkDistribution(marksWithStudentId, studentCount));
         reportDTO.setQuestionCount(topicQuiz.getQuestions().size());
         reportDTO.setMaxDefaultMark(topicQuiz.getQuestions().stream().mapToDouble(TopicQuizQuestion::getDefaultMark).sum());
         reportDTO.setAvgStudentMarkBase10(avgMark);
@@ -445,7 +489,7 @@ public class TopicService {
                 .sum();
     }
 
-    public Map<Number, Double> calculateScoreDistribution(Map<UUID, Double> studentsWithMark, int studentCount) {
+    public Map<Number, Double> calculateMarkDistribution(Map<UUID, Double> studentsWithMark, int studentCount) {
         List<Double> allMarks = studentsWithMark.values().stream().toList();
 
         // Count how many marks fall into each range

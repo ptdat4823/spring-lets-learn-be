@@ -2,6 +2,7 @@ package com.letslive.letslearnbackend.controllers;
 
 import com.letslive.letslearnbackend.dto.SingleQuizReportDTO;
 import com.letslive.letslearnbackend.dto.TopicDTO;
+import com.letslive.letslearnbackend.entities.SingleAssignmentReportDTO;
 import com.letslive.letslearnbackend.security.JwtTokenVo;
 import com.letslive.letslearnbackend.security.SecurityUtils;
 import com.letslive.letslearnbackend.services.TopicService;
@@ -51,9 +52,13 @@ public class TopicController {
         return ResponseEntity.ok(topicDTO);
     }
 
-    @GetMapping("/{id}/report")
-    public ResponseEntity<SingleQuizReportDTO> getTopicById(@PathVariable UUID id, @RequestParam UUID courseId) {
-        JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+    @GetMapping("/{id}/quiz-report")
+    public ResponseEntity<SingleQuizReportDTO> getQuizReport(@PathVariable UUID id, @RequestParam UUID courseId) {
         return ResponseEntity.ok(topicService.getSingleQuizReport(courseId, id));
+    }
+
+    @GetMapping("/{id}/assignment-report")
+    public ResponseEntity<SingleAssignmentReportDTO> getAssignmentReport(@PathVariable UUID id, @RequestParam UUID courseId) {
+        return ResponseEntity.ok(topicService.getSingleAssignmentReport(courseId, id));
     }
 }

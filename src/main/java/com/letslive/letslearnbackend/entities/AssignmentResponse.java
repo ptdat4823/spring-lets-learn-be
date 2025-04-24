@@ -6,8 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,7 +34,7 @@ public class AssignmentResponse {
     private String note;
 
     @Column(name = "mark")
-    private BigDecimal mark;
+    private Double mark;
 
     @Column(name = "graded_at")
     private String gradedAt;

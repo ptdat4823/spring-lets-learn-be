@@ -4,7 +4,6 @@ import com.letslive.letslearnbackend.entities.CloudinaryFile;
 import lombok.Builder;
 import lombok.Data;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,7 +16,7 @@ public class AssignmentResponseDTO {
     private String submittedAt;
 
     private String note;
-    private BigDecimal mark;
+    private Double mark;
     private String gradedAt; // no need on upload
     private UserDTO gradedBy; // no need on upload
     private List<CloudinaryFile> cloudinaryFiles;
