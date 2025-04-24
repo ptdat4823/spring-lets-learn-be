@@ -2,10 +2,7 @@ package com.letslive.letslearnbackend.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.letslive.letslearnbackend.dto.AllQuizzesReportDTO;
-import com.letslive.letslearnbackend.dto.CourseDTO;
-import com.letslive.letslearnbackend.dto.SingleQuizReportDTO;
-import com.letslive.letslearnbackend.dto.TopicDTO;
+import com.letslive.letslearnbackend.dto.*;
 import com.letslive.letslearnbackend.entities.*;
 import com.letslive.letslearnbackend.exception.CustomException;
 import com.letslive.letslearnbackend.mappers.CourseMapper;
@@ -18,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -205,6 +203,64 @@ public class CourseService {
         return result;
     }
 
+    public AllAssignmentsReportDTO getAssignmentsReport(UUID courseId, LocalDateTime startTime, LocalDateTime endTime) {
+        Course course = courseRepository.findById(courseId).orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
+        List<SingleAssignmentReportDTO> singleAssignmentReportDTOs = new ArrayList<>();
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime monthStart = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+        LocalDateTime monthEnd = now.withDayOfMonth(now.toLocalDate().lengthOfMonth())
+                .withHour(23).withMinute(59).withSecond(59);
+        final AtomicInteger[] assignmentsEndingThisMonth = {new AtomicInteger()};
+        final LocalDateTime[] nextClosestEndTime = {null};
+
+        course.getSections().forEach(courseSection -> {
+            courseSection.getTopics().forEach(topic -> {
+                if (topic.getType().equals("quiz")) {
+                    TopicAssignment topicAssignment = topicAssigmentRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("Report to dev please", HttpStatus.INTERNAL_SERVER_ERROR));
+                    LocalDateTime topicStart;
+                    LocalDateTime topicEnd;
+                    if (topicAssignment.getOpen() == null) topicStart = LocalDateTime.MIN; else topicStart = TimeUtils.convertStringToLocalDateTime(topicAssignment.getOpen());
+                    if (topicAssignment.getClose() == null) topicEnd = LocalDateTime.MAX; else topicEnd = TimeUtils.convertStringToLocalDateTime(topicAssignment.getClose());
+                    if (topicStart.isBefore(endTime) && topicEnd.isAfter(startTime)) {
+                        singleAssignmentReportDTOs.add(topicService.getSingleAssignmentReport(courseId, topic.getId()));
+
+                        // Count assignments ending this month
+                        if (topicEnd.isAfter(monthStart) && topicEnd.isBefore(monthEnd)) {
+                            assignmentsEndingThisMonth[0].getAndIncrement();
+                        }
+
+                        // Find next closest end time
+                        if (topicEnd.isAfter(now)) {
+                            if (nextClosestEndTime[0] == null || topicEnd.isBefore(nextClosestEndTime[0])) {
+                                nextClosestEndTime[0] = topicEnd;
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        AllAssignmentsReportDTO reportDTO = new AllAssignmentsReportDTO();
+
+        reportDTO.setAssignmentCount(singleAssignmentReportDTOs.size());
+        reportDTO.setAvgMark(singleAssignmentReportDTOs.stream().mapToDouble(SingleAssignmentReportDTO::getAvgMark).average().orElse(0.0));
+        reportDTO.setAvgCompletionRate(singleAssignmentReportDTOs.stream().mapToDouble(SingleAssignmentReportDTO::getCompletionRate).average().orElse(0.0));
+        reportDTO.setNumberOfAssignmentEndsAtThisMonth(assignmentsEndingThisMonth[0]);
+        reportDTO.setClosestNextEndAssignment(nextClosestEndTime[0]);
+        reportDTO.setMarkDistributionByPercentage(calculateAverageMarkDistributions(singleAssignmentReportDTOs.stream().map(SingleAssignmentReportDTO::getMarkDistributionByPercentage).toList()));
+        reportDTO.setStudentMarks(calculateAverageStudentScorePercentageForAssignments(singleAssignmentReportDTOs));
+        reportDTO.setFileTypeCount(singleAssignmentReportDTOs.stream().map(SingleAssignmentReportDTO::getFileTypeCount)
+                .flatMap(map -> map.entrySet().stream())
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getKey,
+                        Collectors.summingLong(Map.Entry::getValue)
+                )));
+        reportDTO.setSingleAssignmentReports(singleAssignmentReportDTOs);
+
+        return reportDTO;
+    }
+
     public AllQuizzesReportDTO getQuizzesReport(UUID courseId, LocalDateTime startTime, LocalDateTime endTime) {
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
         List<SingleQuizReportDTO> singleQuizReportDTOs = new ArrayList<>();
@@ -232,7 +288,7 @@ public class CourseService {
         reportDTO.setMaxQuestionCount(singleQuizReportDTOs.stream().mapToInt(rep -> (int) rep.getQuestionCount()).max().orElse(0));
         reportDTO.setMinStudentScoreBase10(singleQuizReportDTOs.stream().mapToDouble(SingleQuizReportDTO::getMinStudentMarkBase10).min().orElse(0));
         reportDTO.setMaxStudentScoreBase10(singleQuizReportDTOs.stream().mapToDouble(SingleQuizReportDTO::getMaxStudentMarkBase10).max().orElse(0));
-        reportDTO.setStudentMarkPercentages(calculateAverageStudentScorePercentage(singleQuizReportDTOs));
+        reportDTO.setStudentMarkPercentages(calculateAverageStudentScorePercentageForQuizzes(singleQuizReportDTOs));
         reportDTO.setMarkDistributionByPercentage(calculateAverageMarkDistributions(singleQuizReportDTOs.stream().map(SingleQuizReportDTO::getMarkDistributionByPercentage).toList()));
         reportDTO.setSingleQuizReports(singleQuizReportDTOs);
         reportDTO.setTrueFalseQuestionCount(singleQuizReportDTOs.stream().mapToInt(rep -> (int) rep.getTrueFalseQuestionCount()).sum());
@@ -242,7 +298,7 @@ public class CourseService {
         return reportDTO;
     }
 
-    public Map<UUID, Double> calculateAverageStudentScorePercentage(List<SingleQuizReportDTO> singleQuizReports) {
+    public Map<UUID, Double> calculateAverageStudentScorePercentageForQuizzes(List<SingleQuizReportDTO> singleQuizReports) {
         Map<UUID, List<Double>> studentScorePercentages = new HashMap<>();
 
         // Calculate percentage scores for each quiz and collect them by student
@@ -250,6 +306,27 @@ public class CourseService {
             report.getStudentWithMark().forEach((studentId, mark) -> {
                 double percentage = (mark / report.getMaxDefaultMark()) * 100;
                 studentScorePercentages.computeIfAbsent(studentId, k -> new ArrayList<>()).add(percentage);
+            });
+        }
+
+        // Calculate average percentage for each student
+        return studentScorePercentages.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().stream()
+                                .mapToDouble(Double::doubleValue)
+                                .average()
+                                .orElse(0.0)
+                ));
+    }
+
+    public Map<UUID, Double> calculateAverageStudentScorePercentageForAssignments(List<SingleAssignmentReportDTO> singleAssignmentReports) {
+        Map<UUID, List<Double>> studentScorePercentages = new HashMap<>();
+
+        // Calculate percentage scores for each quiz and collect them by student
+        for (SingleAssignmentReportDTO report : singleAssignmentReports) {
+            report.getStudentMarks().forEach((studentId, mark) -> {
+                studentScorePercentages.computeIfAbsent(studentId, k -> new ArrayList<>()).add(mark);
             });
         }
 

@@ -1,9 +1,6 @@
 package com.letslive.letslearnbackend.controllers;
 
-import com.letslive.letslearnbackend.dto.AllQuizzesReportDTO;
-import com.letslive.letslearnbackend.dto.CourseDTO;
-import com.letslive.letslearnbackend.dto.TopicDTO;
-import com.letslive.letslearnbackend.dto.UserDTO;
+import com.letslive.letslearnbackend.dto.*;
 import com.letslive.letslearnbackend.mappers.UserMapper;
 import com.letslive.letslearnbackend.security.JwtTokenVo;
 import com.letslive.letslearnbackend.security.SecurityUtils;
@@ -85,5 +82,14 @@ public class CourseController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime
     ) {
         return ResponseEntity.ok(courseService.getQuizzesReport(courseId, startTime, endTime));
+    }
+
+    @GetMapping(value = "/{courseId}/assignment-report")
+    public ResponseEntity<AllAssignmentsReportDTO> getAllAssignmentReport(
+            @PathVariable UUID courseId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime
+    ) {
+        return ResponseEntity.ok(courseService.getAssignmentsReport(courseId, startTime, endTime));
     }
 }
