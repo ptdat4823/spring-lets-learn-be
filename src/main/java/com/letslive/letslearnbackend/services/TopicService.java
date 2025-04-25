@@ -348,10 +348,15 @@ public class TopicService {
 
     public SingleAssignmentReportDTO getSingleAssignmentReport(UUID courseId, UUID topicId) {
         Topic topic = topicRepository.findById(topicId).orElseThrow(() -> new CustomException("No topic found!", HttpStatus.NOT_FOUND));
-        TopicAssignment topicQuiz = topicAssigmentRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No topic assignment found!", HttpStatus.NOT_FOUND));
+        TopicAssignment topicAssignment = topicAssigmentRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No topic assignment found!", HttpStatus.NOT_FOUND));
         List<AssignmentResponse> assignmentResponses = assignmentResponseRepository.findAllByTopicId(topic.getId());
-        LocalDateTime topicEndTime = topicQuiz.getClose() == null ? LocalDateTime.MAX : TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose());
+        LocalDateTime topicEndTime = topicAssignment.getClose() == null ? LocalDateTime.MAX : TimeUtils.convertStringToLocalDateTime(topicAssignment.getClose());
+
+        // exclude students that join after the topic is closed
         int studentCount = enrollmentDetailRepository.countByCourseIdAndJoinDateLessThanEqual(courseId, topicEndTime);
+        if (studentCount == 0) {
+            return new SingleAssignmentReportDTO(topic.getTitle());
+        }
 
         Map<UUID, Double> marksWithStudentId = assignmentResponses.stream()
                 .filter(res -> res.getMark() != null)
@@ -366,7 +371,7 @@ public class TopicService {
                 .flatMap(res -> res.getCloudinaryFiles().stream())
                 .map(file -> {
                     int dotIndex = file.getName().lastIndexOf('.');
-                    return file.getDisplayUrl().substring(dotIndex + 1);
+                    return file.getName().substring(dotIndex + 1);
                 })
                 .collect(Collectors.groupingBy(
                         ext -> ext,

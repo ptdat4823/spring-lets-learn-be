@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -12,19 +13,28 @@ import java.util.UUID;
 @AllArgsConstructor
 public class SingleAssignmentReportDTO {
     private String name;
-    private Map<UUID, Double> studentMarks;
+    private Map<UUID, Double> studentMarks = new HashMap<>();
 
-    private Map<Number, Double> markDistributionByPercentage;
+    private Map<Number, Double> markDistributionByPercentage = new HashMap<>();
 
-    private Number submissionCount;
-    private Number gradedSubmissionCount;
-    private Number fileCount;
+    private Number submissionCount = 0;
+    private Number gradedSubmissionCount = 0;
+    private Number fileCount = 0;
 
-    private Double avgMark;
-    private Double maxMark;
-    private Double completionRate;
+    private Double avgMark = 0.0;
+    private Double maxMark = 0.0;
+    private Double completionRate = 0.0;
 
     // count even students that don't take part in the assignment
-    private Number studentCount;
-    private Map<String, Long> fileTypeCount;
+    private Number studentCount = 0;
+    private Map<String, Long> fileTypeCount = new HashMap<>();
+
+    public SingleAssignmentReportDTO(String name) {
+        this.name = name;
+        markDistributionByPercentage.put(-1, 0.0);
+        markDistributionByPercentage.put(0, 0.0);
+        markDistributionByPercentage.put(2, 0.0);
+        markDistributionByPercentage.put(5, 0.0);
+        markDistributionByPercentage.put(8, 0.0);
+    }
 }

@@ -226,7 +226,7 @@ public class CourseService {
                         singleAssignmentReportDTOs.add(topicService.getSingleAssignmentReport(courseId, topic.getId()));
 
                         // Count assignments ending this month
-                        if (topicEnd.isAfter(monthStart) && topicEnd.isBefore(monthEnd)) {
+                        if (topicEnd.isAfter(monthStart) && topicEnd.isBefore(monthEnd) && topicEnd.isAfter(now)) {
                             assignmentsEndingThisMonth[0].getAndIncrement();
                         }
 
