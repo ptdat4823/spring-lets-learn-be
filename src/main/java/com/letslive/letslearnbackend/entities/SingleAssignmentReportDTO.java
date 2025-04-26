@@ -1,10 +1,12 @@
 package com.letslive.letslearnbackend.entities;
 
+import com.letslive.letslearnbackend.dto.UserDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -15,7 +17,7 @@ public class SingleAssignmentReportDTO {
     private String name;
     private Map<UUID, Double> studentMarks = new HashMap<>();
 
-    private Map<Number, Double> markDistributionByPercentage = new HashMap<>();
+    private Map<Number, Number> markDistributionCount = new HashMap<>();
 
     private Number submissionCount = 0;
     private Number gradedSubmissionCount = 0;
@@ -26,15 +28,15 @@ public class SingleAssignmentReportDTO {
     private Double completionRate = 0.0;
 
     // count even students that don't take part in the assignment
-    private Number studentCount = 0;
+    private List<UserDTO> students;
     private Map<String, Long> fileTypeCount = new HashMap<>();
 
     public SingleAssignmentReportDTO(String name) {
         this.name = name;
-        markDistributionByPercentage.put(-1, 0.0);
-        markDistributionByPercentage.put(0, 0.0);
-        markDistributionByPercentage.put(2, 0.0);
-        markDistributionByPercentage.put(5, 0.0);
-        markDistributionByPercentage.put(8, 0.0);
+        markDistributionCount.put(-1, 0);
+        markDistributionCount.put(0, 0);
+        markDistributionCount.put(2, 0);
+        markDistributionCount.put(5, 0);
+        markDistributionCount.put(8, 0);
     }
 }

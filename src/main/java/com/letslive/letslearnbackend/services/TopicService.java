@@ -11,6 +11,7 @@ import com.letslive.letslearnbackend.dto.TopicDTO;
 import com.letslive.letslearnbackend.entities.*;
 import com.letslive.letslearnbackend.exception.CustomException;
 import com.letslive.letslearnbackend.mappers.TopicMapper;
+import com.letslive.letslearnbackend.mappers.UserMapper;
 import com.letslive.letslearnbackend.repositories.*;
 import com.letslive.letslearnbackend.utils.TimeUtils;
 import lombok.RequiredArgsConstructor;
@@ -353,7 +354,8 @@ public class TopicService {
         LocalDateTime topicEndTime = topicAssignment.getClose() == null ? LocalDateTime.MAX : TimeUtils.convertStringToLocalDateTime(topicAssignment.getClose());
 
         // exclude students that join after the topic is closed
-        int studentCount = enrollmentDetailRepository.countByCourseIdAndJoinDateLessThanEqual(courseId, topicEndTime);
+        List<EnrollmentDetail> studentsThatTookPartIn = enrollmentDetailRepository.findByCourseIdAndJoinDateLessThanEqual(courseId, topicEndTime);
+        int studentCount = studentsThatTookPartIn.size();
         if (studentCount == 0) {
             return new SingleAssignmentReportDTO(topic.getTitle());
         }
@@ -381,14 +383,14 @@ public class TopicService {
         SingleAssignmentReportDTO reportDTO = new SingleAssignmentReportDTO();
         reportDTO.setName(topic.getTitle());
         reportDTO.setStudentMarks(marksWithStudentId);
-        reportDTO.setMarkDistributionByPercentage(calculateMarkDistribution(marksWithStudentId, studentCount));
+        reportDTO.setMarkDistributionCount(calculateMarkDistribution(marksWithStudentId, studentCount));
         reportDTO.setSubmissionCount(assignmentResponses.size());
         reportDTO.setGradedSubmissionCount(assignmentResponses.stream().filter(res -> res.getMark() != null).count());
         reportDTO.setFileCount(assignmentResponses.stream().mapToInt(res -> res.getCloudinaryFiles() != null ? res.getCloudinaryFiles().size() : 0).sum());
         reportDTO.setAvgMark(assignmentResponses.stream().filter(res -> res.getMark() != null).mapToDouble(AssignmentResponse::getMark).average().orElse(0.0));
         reportDTO.setMaxMark(assignmentResponses.stream().filter(res -> res.getMark() != null).mapToDouble(AssignmentResponse::getMark).max().orElse(0.0));
         reportDTO.setCompletionRate((double) assignmentResponses.size() / (double) studentCount);
-        reportDTO.setStudentCount(studentCount);
+        reportDTO.setStudents(studentsThatTookPartIn.stream().map(detail -> UserMapper.mapToDTO(detail.getStudent())).toList());
         reportDTO.setFileTypeCount(fileTypeCount);
 
         return reportDTO;
@@ -401,7 +403,8 @@ public class TopicService {
         TopicQuiz topicQuiz = topicQuizRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No topic quiz found!", HttpStatus.NOT_FOUND));
         List<QuizResponseDTO> quizResponses = quizResponseService.getAllQuizResponsesByTopicId(topicQuiz.getTopicId());
         LocalDateTime topicEndTime = topicQuiz.getClose() == null ? LocalDateTime.MAX : TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose());
-        int studentCount = enrollmentDetailRepository.countByCourseIdAndJoinDateLessThanEqual(courseId, topicEndTime);
+        List<EnrollmentDetail> studentsThatTookPartIn = enrollmentDetailRepository.findByCourseIdAndJoinDateLessThanEqual(courseId, topicEndTime);
+        int studentCount = studentsThatTookPartIn.size();
 
         Map<UUID, Double> marksWithStudentId = quizResponses.stream()
                 .flatMap(responseDTO -> responseDTO.getAnswers().stream().map(answer -> {
@@ -442,10 +445,17 @@ public class TopicService {
                 .min()
                 .orElse(0.0); // Default to 0.0 if no marks exist
 
+        List<SingleQuizReportDTO.StudentInfoAndMark> studentInfoAndMarks = getStudentInfoWithMarkAndResponseId(studentsThatTookPartIn, marksWithStudentId);
 
         reportDTO.setName(topic.getTitle());
-        reportDTO.setStudentWithMark(marksWithStudentId);
-        reportDTO.setMarkDistributionByPercentage(calculateMarkDistribution(marksWithStudentId, studentCount));
+
+        reportDTO.setStudentWithMarkOver8(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() >= 8.0).toList());
+        reportDTO.setStudentWithMarkOver5(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() >= 5.0 && info.getMark() < 8.0).toList());
+        reportDTO.setStudentWithMarkOver2(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() >= 2.0 && info.getMark() < 5.0).toList());
+        reportDTO.setStudentWithMarkOver0(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() < 2.0).toList());
+        reportDTO.setStudentWithNoResponse(studentInfoAndMarks.stream().filter(info -> !info.getSubmitted()).toList());
+
+        reportDTO.setMarkDistributionCount(calculateMarkDistribution(marksWithStudentId, studentCount));
         reportDTO.setQuestionCount(topicQuiz.getQuestions().size());
         reportDTO.setMaxDefaultMark(topicQuiz.getQuestions().stream().mapToDouble(TopicQuizQuestion::getDefaultMark).sum());
         reportDTO.setAvgStudentMarkBase10(avgMark);
@@ -454,7 +464,7 @@ public class TopicService {
         reportDTO.setAttemptCount(quizResponses.size());
         reportDTO.setAvgTimeSpend(calculateAvgTimeSpend(quizResponses));
         reportDTO.setCompletionRate(((double)marksWithStudentId.entrySet().size()) / ((double)studentCount));
-        reportDTO.setStudentCount(studentCount);
+        reportDTO.setStudents(studentsThatTookPartIn.stream().map(detail -> UserMapper.mapToDTO(detail.getStudent())).toList());
         reportDTO.setTrueFalseQuestionCount(countQuestionType(quizResponses, "True/False"));
         reportDTO.setMultipleChoiceQuestionCount(countQuestionType(quizResponses, "Choices Answer"));
         reportDTO.setShortAnswerQuestionCount(countQuestionType(quizResponses, "Short Answer"));
@@ -494,7 +504,7 @@ public class TopicService {
                 .sum();
     }
 
-    public Map<Number, Double> calculateMarkDistribution(Map<UUID, Double> studentsWithMark, int studentCount) {
+    public Map<Number, Number> calculateMarkDistribution(Map<UUID, Double> studentsWithMark, int studentCount) {
         List<Double> allMarks = studentsWithMark.values().stream().toList();
 
         // Count how many marks fall into each range
@@ -503,15 +513,59 @@ public class TopicService {
         long count2To4 = allMarks.stream().filter(mark -> mark >= 2 && mark < 5).count();
         long count0To1 = allMarks.stream().filter(mark -> mark >= 0 && mark < 2).count();
 
-        Map<Number, Double> percentageMap = new HashMap<>();
-
-        // Calculate the percentage for each range
-        percentageMap.put(8, (count8OrMore * 100.0) / studentCount);
-        percentageMap.put(5, (count5To7 * 100.0) / studentCount);
-        percentageMap.put(2, (count2To4 * 100.0) / studentCount);
-        percentageMap.put(0, (count0To1 * 100.0) / studentCount);
-        percentageMap.put(-1, (((long)studentCount - count0To1 - count2To4 - count5To7 - count8OrMore) * 100.0) / studentCount);
+        Map<Number, Number> percentageMap = new HashMap<>();
+        percentageMap.put(8, count8OrMore);
+        percentageMap.put(5, count5To7);
+        percentageMap.put(2, count2To4);
+        percentageMap.put(0, count0To1);
+        percentageMap.put(-1, studentCount - count0To1 - count2To4 - count5To7 - count8OrMore);
 
         return percentageMap;
+    }
+
+    public List<SingleQuizReportDTO.StudentInfoAndMark> getStudentInfoWithMarkAndResponseId(
+            List<EnrollmentDetail> studentsThatTookPartIn,
+            Map<UUID, Double> marksWithStudentId
+    ) {
+        // First, create a map of enrollment details by student ID for easier lookup
+        Map<UUID, EnrollmentDetail> enrollmentByStudentId = studentsThatTookPartIn.stream()
+                .collect(Collectors.toMap(
+                        detail -> detail.getStudent().getId(),
+                        detail -> detail
+                ));
+
+        // Create StudentInfoAndMark objects for students with marks
+        List<SingleQuizReportDTO.StudentInfoAndMark> studentsWithMarks = marksWithStudentId.entrySet().stream()
+                .map(entry -> {
+                    UUID studentId = entry.getKey();
+                    Double mark = entry.getValue();
+                    EnrollmentDetail enrollment = enrollmentByStudentId.get(studentId);
+
+                    SingleQuizReportDTO.StudentInfoAndMark info = new SingleQuizReportDTO.StudentInfoAndMark();
+                    info.setStudent(UserMapper.mapToDTO(enrollment.getStudent()));
+                    info.setMark(mark);
+                    info.setResponseId(null); // cause there can be multiple quizzes, i dont know what to get
+                    return info;
+                })
+                .toList();
+
+        // Create StudentInfoAndMark objects for students with no response
+        List<SingleQuizReportDTO.StudentInfoAndMark> studentsNoResponse = enrollmentByStudentId.entrySet().stream()
+                .filter(entry -> !marksWithStudentId.containsKey(entry.getKey()))
+                .map(entry -> {
+                    SingleQuizReportDTO.StudentInfoAndMark info = new SingleQuizReportDTO.StudentInfoAndMark();
+                    info.setStudent(UserMapper.mapToDTO(entry.getValue().getStudent()));
+                    info.setSubmitted(false);
+                    info.setMark(0.0); // or null, depending on your requirements
+                    info.setResponseId(null);
+
+                    return info;
+                })
+                .toList();
+
+        // Now categorize all students based on their marks
+        List<SingleQuizReportDTO.StudentInfoAndMark> allStudents = new ArrayList<>(studentsWithMarks);
+        allStudents.addAll(studentsNoResponse);
+        return allStudents;
     }
 }

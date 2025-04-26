@@ -1,12 +1,12 @@
 package com.letslive.letslearnbackend.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Data
 @AllArgsConstructor
@@ -20,8 +20,16 @@ public class AllQuizzesReportDTO {
     private Double minStudentScoreBase10;
     private Double maxStudentScoreBase10;
 
-    private Map<UUID, Double> studentMarkPercentages;
-    private Map<Number, Double> markDistributionByPercentage;
+    @JsonIgnore
+    private List<SingleQuizReportDTO.StudentInfoAndMark> studentInfoWithMarkAverage;
+
+    private List<SingleQuizReportDTO.StudentInfoAndMark> studentWithMarkOver8;
+    private List<SingleQuizReportDTO.StudentInfoAndMark> studentWithMarkOver5;
+    private List<SingleQuizReportDTO.StudentInfoAndMark> studentWithMarkOver2;
+    private List<SingleQuizReportDTO.StudentInfoAndMark> studentWithMarkOver0;
+    private List<SingleQuizReportDTO.StudentInfoAndMark> studentWithNoResponse;
+
+    private Map<Number, Number> markDistributionCount;
 
     private List<SingleQuizReportDTO> singleQuizReports;
 

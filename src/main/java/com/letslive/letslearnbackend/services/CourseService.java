@@ -248,7 +248,7 @@ public class CourseService {
         reportDTO.setAvgCompletionRate(singleAssignmentReportDTOs.stream().mapToDouble(SingleAssignmentReportDTO::getCompletionRate).average().orElse(0.0));
         reportDTO.setNumberOfAssignmentEndsAtThisMonth(assignmentsEndingThisMonth[0]);
         reportDTO.setClosestNextEndAssignment(nextClosestEndTime[0]);
-        reportDTO.setMarkDistributionByPercentage(calculateAverageMarkDistributions(singleAssignmentReportDTOs.stream().map(SingleAssignmentReportDTO::getMarkDistributionByPercentage).toList()));
+//        reportDTO.setMarkDistributionByPercentage(calculateAverageStudentScoreForQuizzes(singleAssignmentReportDTOs.stream().map(SingleAssignmentReportDTO::getStudentMarks).toList()));
         reportDTO.setStudentMarks(calculateAverageStudentScorePercentageForAssignments(singleAssignmentReportDTOs));
         reportDTO.setFileTypeCount(singleAssignmentReportDTOs.stream().map(SingleAssignmentReportDTO::getFileTypeCount)
                 .flatMap(map -> map.entrySet().stream())
@@ -280,6 +280,8 @@ public class CourseService {
             });
         });
 
+        List<SingleQuizReportDTO.StudentInfoAndMark> studentInfoAndMarks = calculateAverageStudentScoreForQuizzes(singleQuizReportDTOs);
+
         AllQuizzesReportDTO reportDTO = new AllQuizzesReportDTO();
 
         reportDTO.setQuizCount(singleQuizReportDTOs.size());
@@ -288,8 +290,13 @@ public class CourseService {
         reportDTO.setMaxQuestionCount(singleQuizReportDTOs.stream().mapToInt(rep -> (int) rep.getQuestionCount()).max().orElse(0));
         reportDTO.setMinStudentScoreBase10(singleQuizReportDTOs.stream().mapToDouble(SingleQuizReportDTO::getMinStudentMarkBase10).min().orElse(0));
         reportDTO.setMaxStudentScoreBase10(singleQuizReportDTOs.stream().mapToDouble(SingleQuizReportDTO::getMaxStudentMarkBase10).max().orElse(0));
-        reportDTO.setStudentMarkPercentages(calculateAverageStudentScorePercentageForQuizzes(singleQuizReportDTOs));
-        reportDTO.setMarkDistributionByPercentage(calculateAverageMarkDistributions(singleQuizReportDTOs.stream().map(SingleQuizReportDTO::getMarkDistributionByPercentage).toList()));
+        reportDTO.setStudentInfoWithMarkAverage(studentInfoAndMarks);
+        reportDTO.setStudentWithMarkOver8(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() >= 8.0).toList());
+        reportDTO.setStudentWithMarkOver5(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() >= 5.0 && info.getMark() < 8.0).toList());
+        reportDTO.setStudentWithMarkOver2(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() >= 2.0 && info.getMark() < 5.0).toList());
+        reportDTO.setStudentWithMarkOver0(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() < 2.0).toList());
+        reportDTO.setStudentWithNoResponse(studentInfoAndMarks.stream().filter(info -> !info.getSubmitted()).toList());
+        reportDTO.setMarkDistributionCount(mergeMarkDistributionCount(singleQuizReportDTOs.stream().map(SingleQuizReportDTO::getMarkDistributionCount).toList()));
         reportDTO.setSingleQuizReports(singleQuizReportDTOs);
         reportDTO.setTrueFalseQuestionCount(singleQuizReportDTOs.stream().mapToInt(rep -> (int) rep.getTrueFalseQuestionCount()).sum());
         reportDTO.setMultipleChoiceQuestionCount(singleQuizReportDTOs.stream().mapToInt(rep -> (int) rep.getMultipleChoiceQuestionCount()).sum());
@@ -298,26 +305,56 @@ public class CourseService {
         return reportDTO;
     }
 
-    public Map<UUID, Double> calculateAverageStudentScorePercentageForQuizzes(List<SingleQuizReportDTO> singleQuizReports) {
-        Map<UUID, List<Double>> studentScorePercentages = new HashMap<>();
+    public List<SingleQuizReportDTO.StudentInfoAndMark> calculateAverageStudentScoreForQuizzes(List<SingleQuizReportDTO> singleQuizReports) {
+        // Map to store student's scores across quizzes
+        Map<UUID, List<Double>> studentScoresMap = new HashMap<>();
+        // Map to store most recent StudentInfoAndMark for each student
+        Map<UUID, SingleQuizReportDTO.StudentInfoAndMark> latestStudentInfo = new HashMap<>();
 
-        // Calculate percentage scores for each quiz and collect them by student
+        // Collect scores and latest info for each student across all quizzes
         for (SingleQuizReportDTO report : singleQuizReports) {
-            report.getStudentWithMark().forEach((studentId, mark) -> {
-                double percentage = (mark / report.getMaxDefaultMark()) * 100;
-                studentScorePercentages.computeIfAbsent(studentId, k -> new ArrayList<>()).add(percentage);
+            if (report.getStudentWithMark() == null) continue;
+
+            report.getStudentWithMark().forEach(infoAndMark -> {
+                if (infoAndMark.getStudent() != null && infoAndMark.getMark() != null && report.getMaxDefaultMark() != null) {
+                    UUID studentId = infoAndMark.getStudent().getId();
+                    double percentage = (infoAndMark.getMark() / report.getMaxDefaultMark()) * 10;
+
+                    // Store the score
+                    studentScoresMap.computeIfAbsent(studentId, k -> new ArrayList<>()).add(percentage);
+
+                    // Update or store the latest student info
+                    latestStudentInfo.put(studentId, infoAndMark);
+                }
             });
         }
 
-        // Calculate average percentage for each student
-        return studentScorePercentages.entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> entry.getValue().stream()
-                                .mapToDouble(Double::doubleValue)
-                                .average()
-                                .orElse(0.0)
-                ));
+        // Create final list with averaged scores but preserved info
+        return studentScoresMap.entrySet().stream()
+                .map(entry -> {
+                    UUID studentId = entry.getKey();
+                    List<Double> scores = entry.getValue();
+
+                    // Get the existing student info
+                    SingleQuizReportDTO.StudentInfoAndMark existingInfo = latestStudentInfo.get(studentId);
+
+                    // Create new instance to avoid modifying the original
+                    SingleQuizReportDTO.StudentInfoAndMark avgInfo = new SingleQuizReportDTO.StudentInfoAndMark();
+                    // Copy all fields from existing info
+                    avgInfo.setStudent(existingInfo.getStudent());
+                    avgInfo.setSubmitted(existingInfo.getSubmitted());
+                    avgInfo.setResponseId(existingInfo.getResponseId());
+
+                    // Calculate and set the average mark
+                    double averageMark = scores.stream()
+                            .mapToDouble(Double::doubleValue)
+                            .average()
+                            .orElse(0.0);
+                    avgInfo.setMark(averageMark);
+
+                    return avgInfo;
+                })
+                .collect(Collectors.toList());
     }
 
     public Map<UUID, Double> calculateAverageStudentScorePercentageForAssignments(List<SingleAssignmentReportDTO> singleAssignmentReports) {
@@ -341,13 +378,13 @@ public class CourseService {
                 ));
     }
 
-    public Map<Number, Double> calculateAverageMarkDistributions(List<Map<Number, Double>> markDistributions) {
-        Map<Number, List<Double>> groupedValues = new HashMap<>();
+    public Map<Number, Number> mergeMarkDistributionCount(List<Map<Number, Number>> markDistributionCount) {
+        Map<Number, List<Number>> groupedValues = new HashMap<>();
         Number[] keys = {-1, 0, 2, 5, 8};
 
-        for (Map<Number, Double> distribution : markDistributions) {
+        for (Map<Number, Number> distribution : markDistributionCount) {
             for (Number key : keys) {
-                Double value = distribution.getOrDefault(key, 0.0);
+                Number value = distribution.getOrDefault(key, 0.0);
                 groupedValues.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
             }
         }
@@ -356,9 +393,8 @@ public class CourseService {
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         entry -> entry.getValue().stream()
-                                .mapToDouble(Double::doubleValue)
-                                .average()
-                                .orElse(0.0)
+                                .mapToInt(Number::intValue)
+                                .sum()
                 ));
     }
 }
