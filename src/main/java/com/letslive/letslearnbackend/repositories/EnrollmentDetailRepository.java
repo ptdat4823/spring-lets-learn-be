@@ -11,4 +11,5 @@ public interface EnrollmentDetailRepository extends JpaRepository<EnrollmentDeta
     boolean existsByStudentIdAndCourseId(UUID studentId, UUID courseId);
     int countByCourseIdAndJoinDateLessThanEqual(UUID courseId, LocalDateTime date);
     List<EnrollmentDetail> findByCourseIdAndJoinDateLessThanEqual(UUID courseId, LocalDateTime date);
+    List<EnrollmentDetail> findByStudentIdAndJoinDateLessThanEqual(UUID studentId, LocalDateTime date);
 }

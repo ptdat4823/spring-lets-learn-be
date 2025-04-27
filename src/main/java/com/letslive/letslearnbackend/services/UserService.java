@@ -31,6 +31,8 @@ public class UserService {
     private final ObjectMapper mapper = new ObjectMapper();
     private final TopicAssigmentRepository topicAssigmentRepository;
     private final TopicMeetingRepository topicMeetingRepository;
+    private final TopicRepository topicRepository;
+    private final EnrollmentDetailRepository enrollmentDetailRepository;
 
     public UserDTO findUserById(UUID id) {
         User user = userRepository.findById(id).orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
@@ -152,7 +154,23 @@ public class UserService {
     }
 
     public StudentReportDTO getStudentReport(UUID userId, LocalDateTime start, LocalDateTime end) {
+        List<EnrollmentDetail> enrollmentDetails = enrollmentDetailRepository.findByStudentIdAndJoinDateLessThanEqual(userId, end);
+//        Topic topic = topicRepository.findById(topicId).orElseThrow(() -> new CustomException("No topic found!", HttpStatus.NOT_FOUND));
+        SingleQuizReportDTO reportDTO = new SingleQuizReportDTO();
+
         StudentReportDTO report = new StudentReportDTO();
+
+//        report.setDaysWithAvgQuizMark();
+//        report.setDaysWithAvgAssignmentMark();
+//        report.setTotalQuizCount();
+//        report.setTotalAssignmentCount();
+//        report.setQuizToDo();
+//        report.setAssignmentToDo();
+//        report.setAvgQuizMark();
+//        report.setAvgAssignmentMark();
+//        report.setTopTopicQuizWithMark();
+//        report.setTopTopicAssignmentWithMark();
+
         return null;
     }
 }

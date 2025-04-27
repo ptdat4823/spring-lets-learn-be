@@ -15,6 +15,7 @@ import com.letslive.letslearnbackend.mappers.UserMapper;
 import com.letslive.letslearnbackend.repositories.*;
 import com.letslive.letslearnbackend.utils.TimeUtils;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.misc.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -360,12 +361,19 @@ public class TopicService {
             return new SingleAssignmentReportDTO(topic.getTitle());
         }
 
-        Map<UUID, Double> marksWithStudentId = assignmentResponses.stream()
-                .filter(res -> res.getMark() != null)
+        Map<UUID, Pair<Double, UUID>> studentWithMarkAndResponseId = assignmentResponses.stream()
+                .filter(resp -> resp.getMark() != null)
                 .collect(Collectors.toMap(
-                        res -> res.getStudent().getId(),
-                        AssignmentResponse::getMark,
-                        (existing, replacement) -> existing
+                        resp -> resp.getStudent().getId(),
+                        resp -> new Pair<>(resp.getMark(), resp.getId())
+                ));
+
+        // same as above but without the response id
+        Map<UUID, Double> studentWithMarks = assignmentResponses.stream()
+                .filter(resp -> resp.getMark() != null)
+                .collect(Collectors.toMap(
+                        resp -> resp.getStudent().getId(),
+                        AssignmentResponse::getMark
                 ));
 
         Map<String, Long> fileTypeCount = assignmentResponses.stream()
@@ -380,10 +388,13 @@ public class TopicService {
                         Collectors.counting()
                 ));
 
+        List<SingleAssignmentReportDTO.StudentInfoAndMark> studentInfoAndMarks = getStudentInfoWithMarkAndResponseIdForAssignment(studentsThatTookPartIn, studentWithMarkAndResponseId);
+
         SingleAssignmentReportDTO reportDTO = new SingleAssignmentReportDTO();
         reportDTO.setName(topic.getTitle());
-        reportDTO.setStudentMarks(marksWithStudentId);
-        reportDTO.setMarkDistributionCount(calculateMarkDistribution(marksWithStudentId, studentCount));
+        reportDTO.setStudents(studentsThatTookPartIn.stream().map(st -> UserMapper.mapToDTO(st.getStudent())).toList());
+        reportDTO.setStudentMarks(studentInfoAndMarks);
+        reportDTO.setMarkDistributionCount(calculateMarkDistribution(studentWithMarks, studentCount));
         reportDTO.setSubmissionCount(assignmentResponses.size());
         reportDTO.setGradedSubmissionCount(assignmentResponses.stream().filter(res -> res.getMark() != null).count());
         reportDTO.setFileCount(assignmentResponses.stream().mapToInt(res -> res.getCloudinaryFiles() != null ? res.getCloudinaryFiles().size() : 0).sum());
@@ -445,7 +456,7 @@ public class TopicService {
                 .min()
                 .orElse(0.0); // Default to 0.0 if no marks exist
 
-        List<SingleQuizReportDTO.StudentInfoAndMark> studentInfoAndMarks = getStudentInfoWithMarkAndResponseId(studentsThatTookPartIn, marksWithStudentId);
+        List<SingleQuizReportDTO.StudentInfoAndMark> studentInfoAndMarks = getStudentInfoWithMarkAndResponseIdForQuiz(studentsThatTookPartIn, marksWithStudentId);
 
         reportDTO.setName(topic.getTitle());
 
@@ -523,7 +534,7 @@ public class TopicService {
         return percentageMap;
     }
 
-    public List<SingleQuizReportDTO.StudentInfoAndMark> getStudentInfoWithMarkAndResponseId(
+    public List<SingleQuizReportDTO.StudentInfoAndMark> getStudentInfoWithMarkAndResponseIdForQuiz(
             List<EnrollmentDetail> studentsThatTookPartIn,
             Map<UUID, Double> marksWithStudentId
     ) {
@@ -565,6 +576,52 @@ public class TopicService {
 
         // Now categorize all students based on their marks
         List<SingleQuizReportDTO.StudentInfoAndMark> allStudents = new ArrayList<>(studentsWithMarks);
+        allStudents.addAll(studentsNoResponse);
+        return allStudents;
+    }
+
+    public List<SingleAssignmentReportDTO.StudentInfoAndMark> getStudentInfoWithMarkAndResponseIdForAssignment(
+            List<EnrollmentDetail> studentsThatTookPartIn,
+            Map<UUID, Pair<Double, UUID>> studentIdWithMarkAndResponseId
+    ) {
+        // First, create a map of enrollment details by student ID for easier lookup
+        Map<UUID, EnrollmentDetail> enrollmentByStudentId = studentsThatTookPartIn.stream()
+                .collect(Collectors.toMap(
+                        detail -> detail.getStudent().getId(),
+                        detail -> detail
+                ));
+
+        // Create StudentInfoAndMark objects for students with marks
+        List<SingleAssignmentReportDTO.StudentInfoAndMark> studentsWithMarks = studentIdWithMarkAndResponseId.entrySet().stream()
+                .map(entry -> {
+                    UUID studentId = entry.getKey();
+                    Double mark = entry.getValue().a;
+                    EnrollmentDetail enrollment = enrollmentByStudentId.get(studentId);
+
+                    SingleAssignmentReportDTO.StudentInfoAndMark info = new SingleAssignmentReportDTO.StudentInfoAndMark();
+                    info.setStudent(UserMapper.mapToDTO(enrollment.getStudent()));
+                    info.setMark(mark);
+                    info.setResponseId(entry.getValue().b); // cause there can be multiple quizzes, i dont know what to get
+                    return info;
+                })
+                .toList();
+
+        // Create StudentInfoAndMark objects for students with no response
+        List<SingleAssignmentReportDTO.StudentInfoAndMark> studentsNoResponse = enrollmentByStudentId.entrySet().stream()
+                .filter(entry -> !studentIdWithMarkAndResponseId.containsKey(entry.getKey()))
+                .map(entry -> {
+                    SingleAssignmentReportDTO.StudentInfoAndMark info = new SingleAssignmentReportDTO.StudentInfoAndMark();
+                    info.setStudent(UserMapper.mapToDTO(entry.getValue().getStudent()));
+                    info.setSubmitted(false);
+                    info.setMark(0.0); // or null, depending on your requirements
+                    info.setResponseId(null);
+
+                    return info;
+                })
+                .toList();
+
+        // Now categorize all students based on their marks
+        List<SingleAssignmentReportDTO.StudentInfoAndMark> allStudents = new ArrayList<>(studentsWithMarks);
         allStudents.addAll(studentsNoResponse);
         return allStudents;
     }

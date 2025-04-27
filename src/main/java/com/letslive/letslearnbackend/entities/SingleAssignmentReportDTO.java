@@ -14,10 +14,24 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SingleAssignmentReportDTO {
-    private String name;
-    private Map<UUID, Double> studentMarks = new HashMap<>();
+    @Data
+    public static class StudentInfoAndMark {
+        private UserDTO student;
+        private Boolean submitted = true; // mark will be 0.0 for BOTH student who did bad and student who did not turn in the quiz, use submitted to know if student has submitted
+        private Double mark;
+        private UUID responseId;
+    }
 
-    private Map<Number, Number> markDistributionCount = new HashMap<>();
+    private String name;
+
+    private List<StudentInfoAndMark> studentMarks;
+    private List<StudentInfoAndMark> studentWithMarkOver8;
+    private List<StudentInfoAndMark> studentWithMarkOver5;
+    private List<StudentInfoAndMark> studentWithMarkOver2;
+    private List<StudentInfoAndMark> studentWithMarkOver0;
+    private List<StudentInfoAndMark> studentWithNoResponse;
+
+    private Map<Number, Number> markDistributionCount;
 
     private Number submissionCount = 0;
     private Number gradedSubmissionCount = 0;
@@ -33,6 +47,7 @@ public class SingleAssignmentReportDTO {
 
     public SingleAssignmentReportDTO(String name) {
         this.name = name;
+        markDistributionCount = new HashMap<>();
         markDistributionCount.put(-1, 0);
         markDistributionCount.put(0, 0);
         markDistributionCount.put(2, 0);

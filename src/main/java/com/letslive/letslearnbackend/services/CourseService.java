@@ -241,6 +241,7 @@ public class CourseService {
             });
         });
 
+        List<AllAssignmentsReportDTO.StudentInfoWithAverageMark> studentInfoWithAverageMarks = calculateAverageStudentScoreForAssignments(singleAssignmentReportDTOs);
         AllAssignmentsReportDTO reportDTO = new AllAssignmentsReportDTO();
 
         reportDTO.setAssignmentCount(singleAssignmentReportDTOs.size());
@@ -248,8 +249,15 @@ public class CourseService {
         reportDTO.setAvgCompletionRate(singleAssignmentReportDTOs.stream().mapToDouble(SingleAssignmentReportDTO::getCompletionRate).average().orElse(0.0));
         reportDTO.setNumberOfAssignmentEndsAtThisMonth(assignmentsEndingThisMonth[0]);
         reportDTO.setClosestNextEndAssignment(nextClosestEndTime[0]);
-//        reportDTO.setMarkDistributionByPercentage(calculateAverageStudentScoreForQuizzes(singleAssignmentReportDTOs.stream().map(SingleAssignmentReportDTO::getStudentMarks).toList()));
-        reportDTO.setStudentMarks(calculateAverageStudentScorePercentageForAssignments(singleAssignmentReportDTOs));
+        reportDTO.setMarkDistributionCount(mergeMarkDistributionCount(singleAssignmentReportDTOs.stream().map(SingleAssignmentReportDTO::getMarkDistributionCount).toList()));
+        reportDTO.setStudentInfoWithMarkAverage(studentInfoWithAverageMarks);
+
+        reportDTO.setStudentWithMarkOver8(studentInfoWithAverageMarks.stream().filter(info -> info.getAverageMark() != null && info.getAverageMark() >= 8.0).toList());
+        reportDTO.setStudentWithMarkOver5(studentInfoWithAverageMarks.stream().filter(info -> info.getAverageMark() != null && info.getAverageMark() >= 5.0 && info.getAverageMark() < 8.0).toList());
+        reportDTO.setStudentWithMarkOver2(studentInfoWithAverageMarks.stream().filter(info -> info.getAverageMark() != null && info.getAverageMark() >= 2.0 && info.getAverageMark() < 5.0).toList());
+        reportDTO.setStudentWithMarkOver0(studentInfoWithAverageMarks.stream().filter(info -> info.getAverageMark() != null && info.getAverageMark() < 2.0).toList());
+        reportDTO.setStudentWithNoResponse(studentInfoWithAverageMarks.stream().filter(info -> !info.getSubmitted()).toList());
+
         reportDTO.setFileTypeCount(singleAssignmentReportDTOs.stream().map(SingleAssignmentReportDTO::getFileTypeCount)
                 .flatMap(map -> map.entrySet().stream())
                 .collect(Collectors.groupingBy(
@@ -316,7 +324,7 @@ public class CourseService {
             if (report.getStudentWithMark() == null) continue;
 
             report.getStudentWithMark().forEach(infoAndMark -> {
-                if (infoAndMark.getStudent() != null && infoAndMark.getMark() != null && report.getMaxDefaultMark() != null) {
+                if (infoAndMark.getStudent() != null && infoAndMark.getSubmitted() && report.getMaxDefaultMark() != null) {
                     UUID studentId = infoAndMark.getStudent().getId();
                     double percentage = (infoAndMark.getMark() / report.getMaxDefaultMark()) * 10;
 
@@ -357,25 +365,57 @@ public class CourseService {
                 .collect(Collectors.toList());
     }
 
-    public Map<UUID, Double> calculateAverageStudentScorePercentageForAssignments(List<SingleAssignmentReportDTO> singleAssignmentReports) {
-        Map<UUID, List<Double>> studentScorePercentages = new HashMap<>();
+    public List<AllAssignmentsReportDTO.StudentInfoWithAverageMark> calculateAverageStudentScoreForAssignments(List<SingleAssignmentReportDTO> singleAssignmentReports) {
+        // Map to store student's scores across quizzes
+        Map<UUID, List<Double>> studentScoresMap = new HashMap<>();
+        // Map to store most recent StudentInfoAndMark for each student
+        Map<UUID, SingleAssignmentReportDTO.StudentInfoAndMark> latestStudentInfo = new HashMap<>();
 
-        // Calculate percentage scores for each quiz and collect them by student
+        // Collect scores and latest info for each student across all quizzes
         for (SingleAssignmentReportDTO report : singleAssignmentReports) {
-            report.getStudentMarks().forEach((studentId, mark) -> {
-                studentScorePercentages.computeIfAbsent(studentId, k -> new ArrayList<>()).add(mark);
+            if (report.getStudentMarks() == null) continue;
+
+            report.getStudentMarks().forEach(infoAndMark -> {
+                if (infoAndMark.getStudent() != null && infoAndMark.getSubmitted()) {
+                    UUID studentId = infoAndMark.getStudent().getId();
+                    double percentage = infoAndMark.getMark();
+
+                    // Store the score
+                    studentScoresMap.computeIfAbsent(studentId, k -> new ArrayList<>()).add(percentage);
+
+                    // Update or store the latest student info
+                    latestStudentInfo.put(studentId, infoAndMark);
+                }
             });
         }
 
-        // Calculate average percentage for each student
-        return studentScorePercentages.entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> entry.getValue().stream()
-                                .mapToDouble(Double::doubleValue)
-                                .average()
-                                .orElse(0.0)
-                ));
+        // Create final list with averaged scores but preserved info
+        return studentScoresMap.entrySet().stream()
+                .map(entry -> {
+                    UUID studentId = entry.getKey();
+                    List<Double> scores = entry.getValue();
+
+                    // Get the existing student info
+                    SingleAssignmentReportDTO.StudentInfoAndMark existingInfo = latestStudentInfo.get(studentId);
+
+                    // Create new instance to avoid modifying the original
+                    SingleAssignmentReportDTO.StudentInfoAndMark avgInfo = new SingleAssignmentReportDTO.StudentInfoAndMark();
+                    // Copy all fields from existing info
+                    avgInfo.setStudent(existingInfo.getStudent());
+                    avgInfo.setSubmitted(existingInfo.getSubmitted());
+                    avgInfo.setResponseId(existingInfo.getResponseId());
+
+                    // Calculate and set the average mark
+                    double averageMark = scores.stream()
+                            .mapToDouble(Double::doubleValue)
+                            .average()
+                            .orElse(0.0);
+                    avgInfo.setMark(averageMark);
+
+                    return avgInfo;
+                })
+                .toList()
+                .stream().map(set -> new AllAssignmentsReportDTO.StudentInfoWithAverageMark(set.getStudent(), set.getMark(), set.getSubmitted())).toList();
     }
 
     public Map<Number, Number> mergeMarkDistributionCount(List<Map<Number, Number>> markDistributionCount) {

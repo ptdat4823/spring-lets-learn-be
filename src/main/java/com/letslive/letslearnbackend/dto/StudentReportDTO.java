@@ -1,10 +1,12 @@
 package com.letslive.letslearnbackend.dto;
 
+import lombok.Data;
 import org.antlr.v4.runtime.misc.Pair;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Data
 public class StudentReportDTO {
     private List<Pair<LocalDateTime, Double>> daysWithAvgQuizMark;
     private List<Pair<LocalDateTime, Double>> daysWithAvgAssignmentMark;
