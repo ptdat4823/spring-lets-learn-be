@@ -394,6 +394,13 @@ public class TopicService {
         reportDTO.setName(topic.getTitle());
         reportDTO.setStudents(studentsThatTookPartIn.stream().map(st -> UserMapper.mapToDTO(st.getStudent())).toList());
         reportDTO.setStudentMarks(studentInfoAndMarks);
+
+        reportDTO.setStudentWithMarkOver8(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() >= 8.0).toList());
+        reportDTO.setStudentWithMarkOver5(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() >= 5.0 && info.getMark() < 8.0).toList());
+        reportDTO.setStudentWithMarkOver2(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() >= 2.0 && info.getMark() < 5.0).toList());
+        reportDTO.setStudentWithMarkOver0(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() < 2.0).toList());
+        reportDTO.setStudentWithNoResponse(studentInfoAndMarks.stream().filter(info -> !info.getSubmitted()).toList());
+
         reportDTO.setMarkDistributionCount(calculateMarkDistribution(studentWithMarks, studentCount));
         reportDTO.setSubmissionCount(assignmentResponses.size());
         reportDTO.setGradedSubmissionCount(assignmentResponses.stream().filter(res -> res.getMark() != null).count());
