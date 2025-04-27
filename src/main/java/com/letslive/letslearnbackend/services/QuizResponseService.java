@@ -39,6 +39,10 @@ public class QuizResponseService {
         return quizResponseRepository.findAllByTopicId(topicId).stream().map(QuizResponseMapper::toDto).toList();
     }
 
+    public List<QuizResponseDTO> getAllQuizResponsesByTopicIdOfStudent(UUID topicId, UUID studentId) {
+        return quizResponseRepository.findByTopicIdAndStudentId(topicId, studentId).stream().map(QuizResponseMapper::toDto).toList();
+    }
+
     public QuizResponseDTO updateQuizResponseById(UUID id, QuizResponseDTO quizResponseDTO) {
         if (quizResponseRepository.existsById(id)) {
             throw new CustomException("Quiz response not found", HttpStatus.NOT_FOUND);

@@ -1,15 +1,11 @@
 package com.letslive.letslearnbackend.controllers;
 
 
-import com.letslive.letslearnbackend.dto.QuestionDTO;
 import com.letslive.letslearnbackend.dto.QuizResponseDTO;
 import com.letslive.letslearnbackend.dto.UserDTO;
-import com.letslive.letslearnbackend.entities.QuizResponse;
 import com.letslive.letslearnbackend.security.JwtTokenVo;
 import com.letslive.letslearnbackend.security.SecurityUtils;
-import com.letslive.letslearnbackend.services.QuestionService;
 import com.letslive.letslearnbackend.services.QuizResponseService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,8 +34,9 @@ public class QuizResponseController {
     }
 
     @GetMapping()
-    public ResponseEntity<List<QuizResponseDTO>> getAllQuizResponsesByTopicId(@PathVariable UUID topicId) {
-        return ResponseEntity.ok(quizResponseService.getAllQuizResponsesByTopicId(topicId));
+    public ResponseEntity<List<QuizResponseDTO>> getAllQuizResponsesByTopicId(@PathVariable UUID topicId, @RequestParam(required = false) UUID studentId) {
+        if (studentId == null) return ResponseEntity.ok(quizResponseService.getAllQuizResponsesByTopicId(topicId));
+        return ResponseEntity.ok(quizResponseService.getAllQuizResponsesByTopicIdOfStudent(topicId, studentId));
     }
 
     @GetMapping("/{id}")
