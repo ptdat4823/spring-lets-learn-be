@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,22 +24,22 @@ public class AllAssignmentsReportDTO {
         Boolean submitted;
     }
 
-    private Number assignmentCount;
+    private Number assignmentCount = 0;
 
-    private Double avgMark;
-    private Double avgCompletionRate;
-    private Number numberOfAssignmentEndsAtThisMonth;
-    private LocalDateTime closestNextEndAssignment;
+    private Double avgMark = 0.0;
+    private Double avgCompletionRate = 0.0;
+    private Number numberOfAssignmentEndsAtThisMonth = 0;
+    private LocalDateTime closestNextEndAssignment = null;
 
-    private Map<Number, Number> markDistributionCount;
+    private Map<Number, Number> markDistributionCount = new HashMap<>();
     @JsonIgnore
-    private List<StudentInfoWithAverageMark> studentInfoWithMarkAverage;
-    private List<StudentInfoWithAverageMark> studentWithMarkOver8;
-    private List<StudentInfoWithAverageMark> studentWithMarkOver5;
-    private List<StudentInfoWithAverageMark> studentWithMarkOver2;
-    private List<StudentInfoWithAverageMark> studentWithMarkOver0;
-    private List<StudentInfoWithAverageMark> studentWithNoResponse;
+    private List<StudentInfoWithAverageMark> studentInfoWithMarkAverage = new ArrayList<>();
+    private List<StudentInfoWithAverageMark> studentWithMarkOver8 =  new ArrayList<>();
+    private List<StudentInfoWithAverageMark> studentWithMarkOver5 =  new ArrayList<>();
+    private List<StudentInfoWithAverageMark> studentWithMarkOver2 = new ArrayList<>();
+    private List<StudentInfoWithAverageMark> studentWithMarkOver0 = new ArrayList<>();
+    private List<StudentInfoWithAverageMark> studentWithNoResponse =  new ArrayList<>();
 
-    private Map<String, Long> fileTypeCount;
-    private List<SingleAssignmentReportDTO> singleAssignmentReports;
+    private Map<String, Long> fileTypeCount = new HashMap<>();
+    private List<SingleAssignmentReportDTO> singleAssignmentReports = new ArrayList<>();
 }

@@ -4,9 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 // everything is calculated on base 10 except for maxDefaultMark
 @Data
@@ -23,33 +21,33 @@ public class SingleQuizReportDTO {
     private String name;
 
     @JsonIgnore // below is for the all quizzes calculation
-    private List<StudentInfoAndMark> studentWithMark;
+    private List<StudentInfoAndMark> studentWithMark = new ArrayList<>();
 
-    private List<StudentInfoAndMark> studentWithMarkOver8;
-    private List<StudentInfoAndMark> studentWithMarkOver5;
-    private List<StudentInfoAndMark> studentWithMarkOver2;
-    private List<StudentInfoAndMark> studentWithMarkOver0;
-    private List<StudentInfoAndMark> studentWithNoResponse;
+    private List<StudentInfoAndMark> studentWithMarkOver8 = new ArrayList<>();
+    private List<StudentInfoAndMark> studentWithMarkOver5 = new ArrayList<>();
+    private List<StudentInfoAndMark> studentWithMarkOver2 = new ArrayList<>();
+    private List<StudentInfoAndMark> studentWithMarkOver0 = new ArrayList<>();
+    private List<StudentInfoAndMark> studentWithNoResponse = new ArrayList<>();
 
-    private Double maxDefaultMark;
+    private Double maxDefaultMark = 0.0;
 
-    private Map<Number, Number> markDistributionCount;
+    private Map<Number, Number> markDistributionCount = new HashMap<>();
 
-    private Number questionCount;
+    private Number questionCount = 0;
 
-    private Double avgStudentMarkBase10;
-    private Double maxStudentMarkBase10;
-    private Double minStudentMarkBase10;
+    private Double avgStudentMarkBase10 = 0.0;
+    private Double maxStudentMarkBase10 = 0.0;
+    private Double minStudentMarkBase10 = 0.0;
 
-    private Number attemptCount;
-    private Number avgTimeSpend;
+    private Number attemptCount = 0;
+    private Number avgTimeSpend = 0;
 
-    private Double completionRate;
+    private Double completionRate = 0.0;
 
     // count even students that don't take part in the quiz
-    private List<UserDTO> students;
+    private List<UserDTO> students = new ArrayList<>();
 
-    private Number trueFalseQuestionCount;
-    private Number multipleChoiceQuestionCount;
-    private Number shortAnswerQuestionCount;
+    private Number trueFalseQuestionCount = 0;
+    private Number multipleChoiceQuestionCount = 0;
+    private Number shortAnswerQuestionCount = 0;
 }

@@ -5,10 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Data
 @NoArgsConstructor
@@ -24,14 +21,14 @@ public class SingleAssignmentReportDTO {
 
     private String name;
 
-    private List<StudentInfoAndMark> studentMarks;
-    private List<StudentInfoAndMark> studentWithMarkOver8;
-    private List<StudentInfoAndMark> studentWithMarkOver5;
-    private List<StudentInfoAndMark> studentWithMarkOver2;
-    private List<StudentInfoAndMark> studentWithMarkOver0;
-    private List<StudentInfoAndMark> studentWithNoResponse;
+    private List<StudentInfoAndMark> studentMarks = new ArrayList<>();
+    private List<StudentInfoAndMark> studentWithMarkOver8 = new ArrayList<>();
+    private List<StudentInfoAndMark> studentWithMarkOver5 = new ArrayList<>();
+    private List<StudentInfoAndMark> studentWithMarkOver2 = new ArrayList<>();
+    private List<StudentInfoAndMark> studentWithMarkOver0 = new ArrayList<>();
+    private List<StudentInfoAndMark> studentWithNoResponse = new ArrayList<>();
 
-    private Map<Number, Number> markDistributionCount;
+    private Map<Number, Number> markDistributionCount = new HashMap<>();
 
     private Number submissionCount = 0;
     private Number gradedSubmissionCount = 0;
@@ -42,7 +39,7 @@ public class SingleAssignmentReportDTO {
     private Double completionRate = 0.0;
 
     // count even students that don't take part in the assignment
-    private List<UserDTO> students;
+    private List<UserDTO> students = new ArrayList<>();
     private Map<String, Long> fileTypeCount = new HashMap<>();
 
     public SingleAssignmentReportDTO(String name) {
