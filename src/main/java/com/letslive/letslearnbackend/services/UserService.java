@@ -157,17 +157,13 @@ public class UserService {
         if (start == null) start = LocalDateTime.MIN;
         if (end == null) end = LocalDateTime.MAX;
 
-        List<TopicQuiz> topicQuizzes = topicQuizRepository.findByTopicsAndOpenClose(topics.stream().filter(t -> t.getType().equals("quiz")).map(Topic::getId).toList(), start, end);
+        List<TopicQuiz> topicQuizzes = topicQuizRepository.findByTopicsAndOpenClose(topics.stream().filter(t -> t.getType().equals("quiz")).map(Topic::getId).toList(), start.toString(), end.toString());
         List<QuizResponse> quizResponses = quizResponseRepository.findByTopicIdInAndStudentId(topicQuizzes.stream().map(TopicQuiz::getTopicId).toList(), userId);
-        List<TopicAssignment> topicAssignments = topicAssigmentRepository.findByTopicsAndOpenClose(topics.stream().filter(t -> t.getType().equals("assignment")).map(Topic::getId).toList(), start, end);
-        List<AssignmentResponse> assignmentResponses = assignmentResponseRepository.findByTopicIdInAndStudentId(topicQuizzes.stream().map(TopicQuiz::getTopicId).toList(), userId);
+        List<TopicAssignment> topicAssignments = topicAssigmentRepository.findByTopicsAndOpenClose(topics.stream().filter(t -> t.getType().equals("assignment")).map(Topic::getId).toList(), start.toString(), end.toString());
+        List<AssignmentResponse> assignmentResponses = assignmentResponseRepository.findByTopicIdInAndStudentId(topicAssignments.stream().map(TopicAssignment::getTopicId).toList(), userId);
 
         Map<UUID, Double> quizTopicIdWithMarkBase10 = calculateTopicQuizMarkBase10(quizResponses, topicQuizzes.stream().collect(Collectors.toMap(TopicQuiz::getTopicId, TopicQuiz::getGradingMethod)));
         Map<UUID, Double> assignmentTopicIdWithMark = calculateTopicAssignmentMark(assignmentResponses);
-
-        if (assignmentResponses.stream().filter(res -> res.getMark() != null).mapToDouble(AssignmentResponse::getMark).average().orElse(0.0) == assignmentTopicIdWithMark.values().stream().mapToDouble(Double::doubleValue).average().orElse(0.0)) {
-            throw new CustomException("Please contact me if this fails", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
 
         StudentReportDTO report = new StudentReportDTO();
 
@@ -177,19 +173,19 @@ public class UserService {
         report.setAssignmentToDoCount(topicAssignments.size() - assignmentResponses.stream().map(AssignmentResponse::getTopicId).distinct().count());
         report.setAvgQuizMark(quizTopicIdWithMarkBase10.values().stream().mapToDouble(Double::doubleValue).average().orElse(0.0));
         report.setAvgAssignmentMark(assignmentResponses.stream().filter(res -> res.getMark() != null).mapToDouble(AssignmentResponse::getMark).average().orElse(0.0));
-        report.setTopTopicQuiz(topicQuizzes.stream().map(q -> new StudentReportDTO.TopicInfo(
-                TopicMapper.toDTO(topics.stream().filter(t -> t.getId() == q.getTopicId()).findFirst().orElseThrow(() -> new CustomException("Please god dont bug", HttpStatus.INTERNAL_SERVER_ERROR))),
+        report.setTopTopicQuiz(quizResponses.stream().map(q -> new StudentReportDTO.TopicInfo(
+                TopicMapper.toDTO(topics.stream().filter(t -> t.getId().equals(q.getTopicId())).findFirst().orElseThrow(() -> new CustomException("Please god dont bug", HttpStatus.INTERNAL_SERVER_ERROR))),
                 null,
                 quizTopicIdWithMarkBase10.get(q.getTopicId()),
                 null
         )).toList());
 
-        report.setTopTopicAssignment(topicAssignments.stream().map(a -> {
-            AssignmentResponse resp = assignmentResponses.stream().filter(res -> res.getTopicId() == a.getTopicId()).findFirst().orElseThrow(() -> new CustomException("Please god dont bug part 2", HttpStatus.INTERNAL_SERVER_ERROR));
+        report.setTopTopicAssignment(assignmentResponses.stream().map(a -> {
+            AssignmentResponse resp = assignmentResponses.stream().filter(res -> res.getTopicId().equals(a.getTopicId())).findFirst().orElseThrow(() -> new CustomException("Please god dont bug part 2", HttpStatus.INTERNAL_SERVER_ERROR));
                 return new StudentReportDTO.TopicInfo(
-                        TopicMapper.toDTO(topics.stream().filter(t -> t.getId() == a.getTopicId()).findFirst().orElseThrow(() -> new CustomException("Please god dont bug", HttpStatus.INTERNAL_SERVER_ERROR))),
+                        TopicMapper.toDTO(topics.stream().filter(t -> t.getId().equals(a.getTopicId())).findFirst().orElseThrow(() -> new CustomException("Please god dont bug", HttpStatus.INTERNAL_SERVER_ERROR))),
                         resp.getId(),
-                        quizTopicIdWithMarkBase10.get(a.getTopicId()),
+                        assignmentTopicIdWithMark.get(a.getTopicId()),
                         resp.getSubmittedAt()
                 );
             }
@@ -229,7 +225,7 @@ public class UserService {
         return assignmentResponses.stream()
                 .filter(res -> res.getMark() != null)
                 .collect(Collectors.toMap(
-                    AssignmentResponse::getId,
+                    AssignmentResponse::getTopicId,
                     AssignmentResponse::getMark
         ));
     }
