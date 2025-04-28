@@ -3,10 +3,7 @@ package com.letslive.letslearnbackend.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.letslive.letslearnbackend.dto.*;
-import com.letslive.letslearnbackend.entities.AssignmentResponse;
-import com.letslive.letslearnbackend.entities.EnrollmentDetail;
-import com.letslive.letslearnbackend.entities.QuizResponse;
-import com.letslive.letslearnbackend.entities.User;
+import com.letslive.letslearnbackend.entities.*;
 import com.letslive.letslearnbackend.exception.CustomException;
 import com.letslive.letslearnbackend.mappers.*;
 import com.letslive.letslearnbackend.repositories.*;
@@ -16,10 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -33,6 +28,7 @@ public class UserService {
     private final TopicMeetingRepository topicMeetingRepository;
     private final TopicRepository topicRepository;
     private final EnrollmentDetailRepository enrollmentDetailRepository;
+    private final CourseRepository courseRepository;
 
     public UserDTO findUserById(UUID id) {
         User user = userRepository.findById(id).orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
@@ -153,24 +149,99 @@ public class UserService {
         return UserMapper.mapToDTO(user);
     }
 
-    public StudentReportDTO getStudentReport(UUID userId, LocalDateTime start, LocalDateTime end) {
-        List<EnrollmentDetail> enrollmentDetails = enrollmentDetailRepository.findByStudentIdAndJoinDateLessThanEqual(userId, end);
-//        Topic topic = topicRepository.findById(topicId).orElseThrow(() -> new CustomException("No topic found!", HttpStatus.NOT_FOUND));
-        SingleQuizReportDTO reportDTO = new SingleQuizReportDTO();
+    public StudentReportDTO getStudentReport(UUID userId, UUID courseId, LocalDateTime start, LocalDateTime end) {
+//        List<Course> courses = enrollmentDetailRepository.findByStudentIdAndJoinDateLessThanEqual(userId, end).stream().map(EnrollmentDetail::getCourse).toList();
+        Course course = courseRepository.findById(courseId).orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
+
+        List<Topic> topics = topicRepository.findAllBySectionIdIn(course.getSections().stream().map(Section::getId).toList());
+        if (start == null) start = LocalDateTime.MIN;
+        if (end == null) end = LocalDateTime.MAX;
+
+        List<TopicQuiz> topicQuizzes = topicQuizRepository.findByTopicsAndOpenClose(topics.stream().filter(t -> t.getType().equals("quiz")).map(Topic::getId).toList(), start, end);
+        List<QuizResponse> quizResponses = quizResponseRepository.findByTopicIdInAndStudentId(topicQuizzes.stream().map(TopicQuiz::getTopicId).toList(), userId);
+        List<TopicAssignment> topicAssignments = topicAssigmentRepository.findByTopicsAndOpenClose(topics.stream().filter(t -> t.getType().equals("assignment")).map(Topic::getId).toList(), start, end);
+        List<AssignmentResponse> assignmentResponses = assignmentResponseRepository.findByTopicIdInAndStudentId(topicQuizzes.stream().map(TopicQuiz::getTopicId).toList(), userId);
+
+        Map<UUID, Double> quizTopicIdWithMarkBase10 = calculateTopicQuizMarkBase10(quizResponses, topicQuizzes.stream().collect(Collectors.toMap(TopicQuiz::getTopicId, TopicQuiz::getGradingMethod)));
+        Map<UUID, Double> assignmentTopicIdWithMark = calculateTopicAssignmentMark(assignmentResponses);
+
+        if (assignmentResponses.stream().filter(res -> res.getMark() != null).mapToDouble(AssignmentResponse::getMark).average().orElse(0.0) == assignmentTopicIdWithMark.values().stream().mapToDouble(Double::doubleValue).average().orElse(0.0)) {
+            throw new CustomException("Please contact me if this fails", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 
         StudentReportDTO report = new StudentReportDTO();
 
-//        report.setDaysWithAvgQuizMark();
-//        report.setDaysWithAvgAssignmentMark();
-//        report.setTotalQuizCount();
-//        report.setTotalAssignmentCount();
-//        report.setQuizToDo();
-//        report.setAssignmentToDo();
-//        report.setAvgQuizMark();
-//        report.setAvgAssignmentMark();
-//        report.setTopTopicQuizWithMark();
-//        report.setTopTopicAssignmentWithMark();
+        report.setTotalQuizCount(topicQuizzes.size());
+        report.setTotalAssignmentCount(topicAssignments.size());
+        report.setQuizToDoCount(topicQuizzes.size() - quizResponses.stream().map(QuizResponse::getTopicId).distinct().count());
+        report.setAssignmentToDoCount(topicAssignments.size() - assignmentResponses.stream().map(AssignmentResponse::getTopicId).distinct().count());
+        report.setAvgQuizMark(quizTopicIdWithMarkBase10.values().stream().mapToDouble(Double::doubleValue).average().orElse(0.0));
+        report.setAvgAssignmentMark(assignmentResponses.stream().filter(res -> res.getMark() != null).mapToDouble(AssignmentResponse::getMark).average().orElse(0.0));
+        report.setTopTopicQuiz(topicQuizzes.stream().map(q -> new StudentReportDTO.TopicInfo(
+                TopicMapper.toDTO(topics.stream().filter(t -> t.getId() == q.getTopicId()).findFirst().orElseThrow(() -> new CustomException("Please god dont bug", HttpStatus.INTERNAL_SERVER_ERROR))),
+                null,
+                quizTopicIdWithMarkBase10.get(q.getTopicId()),
+                null
+        )).toList());
 
-        return null;
+        report.setTopTopicAssignment(topicAssignments.stream().map(a -> {
+            AssignmentResponse resp = assignmentResponses.stream().filter(res -> res.getTopicId() == a.getTopicId()).findFirst().orElseThrow(() -> new CustomException("Please god dont bug part 2", HttpStatus.INTERNAL_SERVER_ERROR));
+                return new StudentReportDTO.TopicInfo(
+                        TopicMapper.toDTO(topics.stream().filter(t -> t.getId() == a.getTopicId()).findFirst().orElseThrow(() -> new CustomException("Please god dont bug", HttpStatus.INTERNAL_SERVER_ERROR))),
+                        resp.getId(),
+                        quizTopicIdWithMarkBase10.get(a.getTopicId()),
+                        resp.getSubmittedAt()
+                );
+            }
+        ).toList());
+
+        return report;
+    }
+
+    private Map<UUID, Double> calculateTopicQuizMarkBase10(List<QuizResponse> quizResponses, Map<UUID, String> topicIdAndGradingMethod) {
+        // First group responses by topic ID with their marks
+        return quizResponses.stream()
+                .flatMap(responseDTO -> responseDTO.getAnswers().stream().map(answer -> {
+                    try {
+                        Question question = mapper.readValue(answer.getQuestion(), Question.class);
+                        double normalizedMark = (answer.getMark() / question.getDefaultMark()) * 10; // Normalize to base 10
+                        return new AbstractMap.SimpleEntry<>(responseDTO.getTopicId(), normalizedMark);
+                    } catch (JsonProcessingException e) {
+                        throw new CustomException("Error parsing question data: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+                }))
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getKey, // group by topic id
+                        Collectors.mapping(
+                                Map.Entry::getValue, // Extract the marks
+                                Collectors.toList() // Collect marks into a list
+                        )
+                ))
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey, // Keep the topic id as the key
+                        entry -> calculateMark(entry.getValue(), topicIdAndGradingMethod.get(entry.getKey())) // Calculate the grade based on the method
+                ));
+    }
+
+    private Map<UUID, Double> calculateTopicAssignmentMark(List<AssignmentResponse> assignmentResponses) {
+        return assignmentResponses.stream()
+                .filter(res -> res.getMark() != null)
+                .collect(Collectors.toMap(
+                    AssignmentResponse::getId,
+                    AssignmentResponse::getMark
+        ));
+    }
+
+    // Your existing calculateMark method
+    private double calculateMark(List<Double> marks, String method) {
+        return switch (method) {
+            case "Highest Grade" -> marks.stream().max(Double::compare).orElse(0.0);
+            case "Average Grade" -> marks.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+            case "First Grade" -> marks.isEmpty() ? 0.0 : marks.get(0);
+            case "Last Grade" -> marks.isEmpty() ? 0.0 : marks.get(marks.size() - 1);
+            default -> throw new IllegalArgumentException("Invalid method: " + method);
+        };
     }
 }

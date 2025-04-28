@@ -1,14 +1,12 @@
 package com.letslive.letslearnbackend.controllers;
 
 import com.letslive.letslearnbackend.dto.*;
-import com.letslive.letslearnbackend.exception.CustomException;
 import com.letslive.letslearnbackend.security.JwtTokenVo;
 import com.letslive.letslearnbackend.security.SecurityUtils;
 import com.letslive.letslearnbackend.services.AuthService;
 import com.letslive.letslearnbackend.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -76,9 +74,11 @@ public class UserController {
 
     @GetMapping("/me/report")
     public ResponseEntity<StudentReportDTO> getLearnerReport(
+            @RequestParam(required = false) UUID courseId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end
     ) {
-        throw new CustomException("Not implemented", HttpStatus.NOT_IMPLEMENTED);
+        JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        return ResponseEntity.ok(userService.getStudentReport(vo.getUserID(), courseId, start, end));
     }
 }

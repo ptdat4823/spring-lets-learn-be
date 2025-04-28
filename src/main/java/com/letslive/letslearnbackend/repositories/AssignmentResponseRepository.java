@@ -11,4 +11,5 @@ public interface AssignmentResponseRepository extends JpaRepository<AssignmentRe
     List<AssignmentResponse> findAllByTopicId(UUID topicId);
     List<AssignmentResponse> findAllByStudentId(UUID studentId);
     Optional<AssignmentResponse> findByTopicIdAndStudentId(UUID topicId, UUID studentId);
+    List<AssignmentResponse> findByTopicIdInAndStudentId(List<UUID> topicIds, UUID studentId);
 }
