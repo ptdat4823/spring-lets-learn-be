@@ -1,9 +1,6 @@
 package com.letslive.letslearnbackend.utils;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.Locale;
@@ -11,6 +8,13 @@ import java.util.Locale;
 public class TimeUtils {
     public static final LocalDateTime MIN = LocalDateTime.of(1000, 12,31, 23, 59, 59);
     public static final LocalDateTime MAX = LocalDateTime.of(3000, 12,31, 23, 59, 59);
+
+    public static LocalDateTime getCurrentTimeGMT7() {
+        ZonedDateTime currentUTC = ZonedDateTime.now(ZoneId.of("UTC"));
+        ZonedDateTime gmt7Time = currentUTC.withZoneSameInstant(ZoneId.of("Asia/Ho_Chi_Minh"));
+        return gmt7Time.toLocalDateTime();
+    }
+
     public static LocalDateTime convertStringToLocalDateTime(String isoString) {
         DateTimeFormatter parser = new DateTimeFormatterBuilder()
                 .appendPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")

@@ -1,6 +1,5 @@
 package com.letslive.letslearnbackend.services;
 
-import ch.qos.logback.core.util.TimeUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.letslive.letslearnbackend.dto.*;
@@ -43,7 +42,7 @@ public class CourseService {
 
         courseDTO.getSections().forEach(sectionDTO -> {
             sectionDTO.getTopics().forEach(topicDTO -> {
-                TopicDTO topicData = topicService.getTopicById(topicDTO.getId(), null);
+                TopicDTO topicData = topicService.getTopicById(topicDTO.getId(), courseId, null);
                 topicDTO.setData(topicData.getData());
             });
         });

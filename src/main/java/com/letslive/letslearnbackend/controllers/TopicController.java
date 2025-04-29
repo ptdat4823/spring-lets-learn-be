@@ -46,7 +46,7 @@ public class TopicController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TopicDTO> getTopicById(@PathVariable UUID id, @PathVariable String courseId) {
+    public ResponseEntity<TopicDTO> getTopicById(@PathVariable UUID id, @PathVariable UUID courseId) {
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         TopicDTO topicDTO = topicService.getTopicById(id, courseId, vo.getUserID());
         return ResponseEntity.ok(topicDTO);

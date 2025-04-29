@@ -55,12 +55,12 @@ public class UserService {
 
         user.getEnrollmentDetails().stream().map(EnrollmentDetail::getCourse).forEach(course -> {
             course.getSections().forEach(courseSection -> {
-                courseSection.getTopics().forEach(topicSection -> {
-                    if (type == null || type.isEmpty() || type.equals(topicSection.getType())) {
-                        switch (topicSection.getType()) {
+                courseSection.getTopics().forEach(topic -> {
+                    if (type == null || type.isEmpty() || type.equals(topic.getType())) {
+                        switch (topic.getType()) {
                             case "quiz":
                                 if (type == null || type.equals("quiz")) {
-                                    topicQuizRepository.findByTopicId(topicSection.getId()).ifPresent(topicQuiz -> {
+                                    topicQuizRepository.findByTopicId(topic.getId()).ifPresent(topicQuiz -> {
                                         if (end != null) {
                                             LocalDateTime endTime = TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose());
                                             if (!endTime.isBefore(end)) return;
@@ -68,7 +68,7 @@ public class UserService {
 
                                         try {
                                             String data = mapper.writeValueAsString(topicQuiz);
-                                            TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
+                                            TopicDTO topicDTO = TopicMapper.toDTO(topic);
 
                                             List<QuizResponse> res = quizResponseRepository.findByTopicIdAndStudentId(topicQuiz.getTopicId(), userId);
                                             String resData = mapper.writeValueAsString(res);
@@ -85,7 +85,7 @@ public class UserService {
                                 break;
                             case "assignment":
                                 if (type == null || type.equals("assignment")) {
-                                    topicAssigmentRepository.findByTopicId(topicSection.getId()).ifPresent(topicAssignment -> {
+                                    topicAssigmentRepository.findByTopicId(topic.getId()).ifPresent(topicAssignment -> {
                                         if (end != null) {
                                             LocalDateTime endTime = TimeUtils.convertStringToLocalDateTime(topicAssignment.getClose());
                                             if (!endTime.isBefore(end)) return;
@@ -93,7 +93,7 @@ public class UserService {
 
                                         try {
                                             String data = mapper.writeValueAsString(topicAssignment);
-                                            TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
+                                            TopicDTO topicDTO = TopicMapper.toDTO(topic);
 
                                             Optional<AssignmentResponse> res = assignmentResponseRepository.findByTopicIdAndStudentId(topicAssignment.getTopicId(), userId);
                                             if (res.isPresent()) {
@@ -112,7 +112,7 @@ public class UserService {
                                 break;
                             case "meeting":
                                 if (type == null || type.equals("meeting")) {
-                                    topicMeetingRepository.findByTopicId(topicSection.getId()).ifPresent(topicMeeting -> {
+                                    topicMeetingRepository.findByTopicId(topic.getId()).ifPresent(topicMeeting -> {
                                         if (end != null) {
                                             LocalDateTime startTime = TimeUtils.convertStringToLocalDateTime(topicMeeting.getOpen());
                                             if (!(startTime.isAfter(start) && startTime.isBefore(end))) return;
@@ -120,7 +120,7 @@ public class UserService {
 
                                         try {
                                             String data = mapper.writeValueAsString(topicMeeting);
-                                            TopicDTO topicDTO = TopicMapper.toDTO(topicSection);
+                                            TopicDTO topicDTO = TopicMapper.toDTO(topic);
                                             topicDTO.setData(data);
                                             topicDTO.setCourse(CourseMapper.mapToDTO(course));
                                             result.add(topicDTO);
@@ -131,7 +131,6 @@ public class UserService {
                                 }
                                 break;
                             default:
-                                throw new CustomException("Type not found, something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR);
                         }
                     }
                 });

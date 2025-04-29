@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationServiceException;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -42,6 +41,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         skipURLs.add("/auth/signup");
         skipURLs.add("/auth/refresh");
         skipURLs.add("/auth/login");
+        skipURLs.add("/auth/logout");
+        skipURLs.add("/ws");
 
         return skipURLs.stream().anyMatch(skipURL -> path.startsWith(skipURL));
     }
