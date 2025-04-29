@@ -1,5 +1,6 @@
 package com.letslive.letslearnbackend.services;
 
+import ch.qos.logback.core.util.TimeUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.letslive.letslearnbackend.dto.*;
@@ -220,8 +221,8 @@ public class CourseService {
                     TopicAssignment topicAssignment = topicAssigmentRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("Report to dev please", HttpStatus.INTERNAL_SERVER_ERROR));
                     LocalDateTime topicStart;
                     LocalDateTime topicEnd;
-                    if (topicAssignment.getOpen() == null) topicStart = LocalDateTime.MIN; else topicStart = TimeUtils.convertStringToLocalDateTime(topicAssignment.getOpen());
-                    if (topicAssignment.getClose() == null) topicEnd = LocalDateTime.MAX; else topicEnd = TimeUtils.convertStringToLocalDateTime(topicAssignment.getClose());
+                    if (topicAssignment.getOpen() == null) topicStart = TimeUtils.MIN; else topicStart = TimeUtils.convertStringToLocalDateTime(topicAssignment.getOpen());
+                    if (topicAssignment.getClose() == null) topicEnd = TimeUtils.MAX; else topicEnd = TimeUtils.convertStringToLocalDateTime(topicAssignment.getClose());
                     if (topicStart.isBefore(endTime) && topicEnd.isAfter(startTime)) {
                         singleAssignmentReportDTOs.add(topicService.getSingleAssignmentReport(courseId, topic.getId()));
 
@@ -279,8 +280,8 @@ public class CourseService {
                     TopicQuiz topicQuiz = topicQuizRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("Report to dev please", HttpStatus.INTERNAL_SERVER_ERROR));
                     LocalDateTime topicStart;
                     LocalDateTime topicEnd;
-                    if (topicQuiz.getOpen() == null) topicStart = LocalDateTime.MIN; else topicStart = TimeUtils.convertStringToLocalDateTime(topicQuiz.getOpen());
-                    if (topicQuiz.getClose() == null) topicEnd = LocalDateTime.MAX; else topicEnd = TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose());
+                    if (topicQuiz.getOpen() == null) topicStart = TimeUtils.MIN; else topicStart = TimeUtils.convertStringToLocalDateTime(topicQuiz.getOpen());
+                    if (topicQuiz.getClose() == null) topicEnd = TimeUtils.MAX; else topicEnd = TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose());
                     if (topicStart.isBefore(endTime) && topicEnd.isAfter(startTime)) {
                         singleQuizReportDTOs.add(topicService.getSingleQuizReport(courseId, topic.getId()));
                     }

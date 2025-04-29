@@ -154,8 +154,8 @@ public class UserService {
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
 
         List<Topic> topics = topicRepository.findAllBySectionIdIn(course.getSections().stream().map(Section::getId).toList());
-        if (start == null) start = LocalDateTime.MIN;
-        if (end == null) end = LocalDateTime.MAX;
+        if (start == null) start = TimeUtils.MIN;
+        if (end == null) end = TimeUtils.MAX;
 
         List<TopicQuiz> topicQuizzes = topicQuizRepository.findByTopicsAndOpenClose(topics.stream().filter(t -> t.getType().equals("quiz")).map(Topic::getId).toList(), start.toString(), end.toString());
         List<QuizResponse> quizResponses = quizResponseRepository.findByTopicIdInAndStudentId(topicQuizzes.stream().map(TopicQuiz::getTopicId).toList(), userId);

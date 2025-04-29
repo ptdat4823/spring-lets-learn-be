@@ -314,6 +314,9 @@ public class TopicService {
                 TopicMeeting topicMeeting = topicMeetingRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No meeting found!", HttpStatus.NOT_FOUND));
                 try {
                     topicData = mapper.writeValueAsString(topicMeeting);
+                    // meeting does not have closeDate
+                    LocalDateTime closeDate = topicMeeting.getOpen() == null ? TimeUtils.MAX : TimeUtils.convertStringToLocalDateTime(topicMeeting.getOpen());
+                    studentCount = enrollmentDetailRepository.countByCourseIdAndJoinDateLessThanEqual(courseId, closeDate);
                 } catch (JsonProcessingException e) {
                     throw new CustomException("Error parsing meeting data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
                 }
@@ -358,7 +361,7 @@ public class TopicService {
         Topic topic = topicRepository.findById(topicId).orElseThrow(() -> new CustomException("No topic found!", HttpStatus.NOT_FOUND));
         TopicAssignment topicAssignment = topicAssigmentRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No topic assignment found!", HttpStatus.NOT_FOUND));
         List<AssignmentResponse> assignmentResponses = assignmentResponseRepository.findAllByTopicId(topic.getId());
-        LocalDateTime topicEndTime = topicAssignment.getClose() == null ? LocalDateTime.MAX : TimeUtils.convertStringToLocalDateTime(topicAssignment.getClose());
+        LocalDateTime topicEndTime = topicAssignment.getClose() == null ? TimeUtils.MAX : TimeUtils.convertStringToLocalDateTime(topicAssignment.getClose());
 
         // exclude students that join after the topic is closed
         List<EnrollmentDetail> studentsThatTookPartIn = enrollmentDetailRepository.findByCourseIdAndJoinDateLessThanEqual(courseId, topicEndTime);
@@ -426,7 +429,7 @@ public class TopicService {
 
         TopicQuiz topicQuiz = topicQuizRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No topic quiz found!", HttpStatus.NOT_FOUND));
         List<QuizResponseDTO> quizResponses = quizResponseService.getAllQuizResponsesByTopicId(topicQuiz.getTopicId());
-        LocalDateTime topicEndTime = topicQuiz.getClose() == null ? LocalDateTime.MAX : TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose());
+        LocalDateTime topicEndTime = topicQuiz.getClose() == null ? TimeUtils.MAX : TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose());
         List<EnrollmentDetail> studentsThatTookPartIn = enrollmentDetailRepository.findByCourseIdAndJoinDateLessThanEqual(courseId, topicEndTime);
         int studentCount = studentsThatTookPartIn.size();
 
