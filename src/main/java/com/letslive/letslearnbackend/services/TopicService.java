@@ -279,10 +279,11 @@ public class TopicService {
         topicRepository.deleteById(id);
     }
 
-    public TopicDTO getTopicById(UUID id, UUID userId) {
+    public TopicDTO getTopicById(UUID id, UUID courseId, UUID userId) {
         Topic topic = topicRepository.findById(id).orElseThrow(() -> new CustomException("No topic found!", HttpStatus.NOT_FOUND));
         String topicData;
         String studentResponseData = null;
+        Number studentCount = null;
 
         switch (topic.getType()) {
             case "quiz":
@@ -290,6 +291,8 @@ public class TopicService {
                 try {
                     topicData = mapper.writeValueAsString(topicQuiz);
                     List<QuizResponse> res = quizResponseRepository.findByTopicIdAndStudentId(topicQuiz.getTopicId(), userId);
+                    LocalDateTime closeDate = topicQuiz.getClose() == null ? LocalDateTime.of(3000, 12,31, 23, 59, 59) : TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose());
+                    studentCount = enrollmentDetailRepository.countByCourseIdAndJoinDateLessThanEqual(courseId, closeDate);
                     studentResponseData = mapper.writeValueAsString(res);
                 } catch (JsonProcessingException e) {
                     throw new CustomException("Error parsing quiz data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -300,6 +303,8 @@ public class TopicService {
                 try {
                     topicData = mapper.writeValueAsString(topicAssignment);
                     Optional<AssignmentResponse> res = assignmentResponseRepository.findByTopicIdAndStudentId(topicAssignment.getTopicId(), userId);
+                    LocalDateTime closeDate = topicAssignment.getClose() == null ? TimeUtils.MAX : TimeUtils.convertStringToLocalDateTime(topicAssignment.getClose());
+                    studentCount = enrollmentDetailRepository.countByCourseIdAndJoinDateLessThanEqual(courseId, closeDate);
                     if (res.isPresent()) studentResponseData = mapper.writeValueAsString(res);
                 } catch (JsonProcessingException e) {
                     throw new CustomException("Error parsing assigment data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -343,6 +348,7 @@ public class TopicService {
 
         TopicDTO createdTopicDTO = TopicMapper.toDTO(topic);
         createdTopicDTO.setData(topicData);
+        createdTopicDTO.setStudentCount(studentCount);
         createdTopicDTO.setResponse(studentResponseData);
 
         return createdTopicDTO;

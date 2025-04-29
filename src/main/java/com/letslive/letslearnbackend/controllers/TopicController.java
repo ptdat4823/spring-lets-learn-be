@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/topic")
+@RequestMapping("/course/{courseId}/topic")
 @Validated
 public class TopicController {
     private final TopicService topicService;
@@ -46,19 +46,19 @@ public class TopicController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TopicDTO> getTopicById(@PathVariable UUID id) {
+    public ResponseEntity<TopicDTO> getTopicById(@PathVariable UUID id, @PathVariable String courseId) {
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-        TopicDTO topicDTO = topicService.getTopicById(id, vo.getUserID());
+        TopicDTO topicDTO = topicService.getTopicById(id, courseId, vo.getUserID());
         return ResponseEntity.ok(topicDTO);
     }
 
     @GetMapping("/{id}/quiz-report")
-    public ResponseEntity<SingleQuizReportDTO> getQuizReport(@PathVariable UUID id, @RequestParam UUID courseId) {
+    public ResponseEntity<SingleQuizReportDTO> getQuizReport(@PathVariable UUID id, @PathVariable UUID courseId) {
         return ResponseEntity.ok(topicService.getSingleQuizReport(courseId, id));
     }
 
     @GetMapping("/{id}/assignment-report")
-    public ResponseEntity<SingleAssignmentReportDTO> getAssignmentReport(@PathVariable UUID id, @RequestParam UUID courseId) {
+    public ResponseEntity<SingleAssignmentReportDTO> getAssignmentReport(@PathVariable UUID id, @PathVariable UUID courseId) {
         return ResponseEntity.ok(topicService.getSingleAssignmentReport(courseId, id));
     }
 }

@@ -1,6 +1,5 @@
 package com.letslive.letslearnbackend.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -8,7 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,6 +24,9 @@ public class TopicQuiz {
     @Column(nullable = false, name = "topic_id")
     @JsonProperty("topicId")
     private UUID topicId;
+
+    @Transient
+    private Number studentCount;
 
     @JsonProperty("description")
     private String description;

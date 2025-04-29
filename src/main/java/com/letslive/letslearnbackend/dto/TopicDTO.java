@@ -13,6 +13,7 @@ public class TopicDTO {
     private String title;
     private String type;
     private String data;
+    private Number studentCount;
     private String response;
     private CourseDTO course;
 }
