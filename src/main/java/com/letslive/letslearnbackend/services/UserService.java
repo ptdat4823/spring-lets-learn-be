@@ -53,7 +53,15 @@ public class UserService {
                 .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
         List<TopicDTO> result = new ArrayList<>();
 
-        user.getEnrollmentDetails().stream().map(EnrollmentDetail::getCourse).forEach(course -> {
+        List<Course> courses = null;
+
+        if (user.getRole() == "TEACHER") {
+            courses = courseRepository.findByCreatorId(user.getId());
+        } else {
+            courses = user.getEnrollmentDetails().stream().map(EnrollmentDetail::getCourse).toList();
+        }
+
+        courses.forEach(course -> {
             course.getSections().forEach(courseSection -> {
                 courseSection.getTopics().forEach(topic -> {
                     if (type == null || type.isEmpty() || type.equals(topic.getType())) {
