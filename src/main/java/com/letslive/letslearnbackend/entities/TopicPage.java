@@ -27,6 +27,7 @@ public class TopicPage {
     @JsonProperty("description")
     private String description;
 
+    @Column(columnDefinition = "TEXT")
     @JsonProperty
     private String content;
 }

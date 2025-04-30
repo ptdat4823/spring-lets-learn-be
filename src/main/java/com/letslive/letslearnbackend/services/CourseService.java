@@ -216,7 +216,7 @@ public class CourseService {
 
         course.getSections().forEach(courseSection -> {
             courseSection.getTopics().forEach(topic -> {
-                if (topic.getType().equals("quiz")) {
+                if (topic.getType().equals("assignment")) {
                     TopicAssignment topicAssignment = topicAssigmentRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("Report to dev please", HttpStatus.INTERNAL_SERVER_ERROR));
                     LocalDateTime topicStart;
                     LocalDateTime topicEnd;
