@@ -9,9 +9,8 @@ import java.util.UUID;
 @Data
 @Builder
 public class ConversationDTO {
-    private UUID id;
+    private UUID id; // no need on upload
     private UserDTO user1;
     private UserDTO user2;
-    private List<GetMessageDTO> messages;
-
+    private List<GetMessageDTO> messages; // no need on upload
 }
