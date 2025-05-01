@@ -26,7 +26,7 @@ public class ConversationService {
         User user1 = userRepository.findById(user1Id).orElseThrow(() -> new CustomException("User not found", HttpStatus.BAD_REQUEST));
         User user2 = userRepository.findById(user2Id).orElseThrow(() -> new CustomException("User not found", HttpStatus.BAD_REQUEST));
 
-        Optional<Conversation> conversation = conversationRepository.findByUser1IdAndUser2Id(user1Id, user2Id);
+        Optional<Conversation> conversation = conversationRepository.findByUsers(user1Id, user2Id);
         Conversation createdConversation = conversation.orElseGet(() -> {
             Conversation newConversation = new Conversation();
             newConversation.setUser1(user1);
@@ -45,7 +45,7 @@ public class ConversationService {
 
     public List<ConversationDTO> getAllByUserId(UUID userId) {
         if (!userRepository.existsById(userId)) throw new CustomException("User not found", HttpStatus.BAD_REQUEST);
-        List<Conversation> conversations = conversationRepository.getConversationsByUser1IdOrUser2Id(userId, userId);
+        List<Conversation> conversations = conversationRepository.findAllByUserId(userId);
 
         return conversations.stream().map(c -> ConversationDTO
                 .builder()

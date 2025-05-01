@@ -10,10 +10,12 @@ import com.letslive.letslearnbackend.mappers.MessageMapper;
 import com.letslive.letslearnbackend.repositories.ConversationRepository;
 import com.letslive.letslearnbackend.repositories.MessageRepository;
 import com.letslive.letslearnbackend.repositories.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,6 +30,7 @@ public class MessageService {
         return messageRepository.findByConversationIdOrderByTimestamp(conversationId);
     }
 
+    @Transactional
     public GetMessageDTO saveMessage(UUID conversationId, CreateMessageDTO message) {
         Conversation conversation = conversationRepository.findById(conversationId).orElseThrow(() -> new CustomException("Conversation not found", HttpStatus.NOT_FOUND));
         User sender = userRepository.findById(message.getSenderId()).orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
@@ -37,6 +40,10 @@ public class MessageService {
         messageEntity.setConversation(conversation);
         messageEntity.setSender(sender);
         Message savedMessage = messageRepository.save(messageEntity);
+
+        conversation.setUpdatedAt(LocalDateTime.now());
+        conversationRepository.save(conversation);
+
         return MessageMapper.mapToGetMessageDTO(savedMessage);
     }
 }
