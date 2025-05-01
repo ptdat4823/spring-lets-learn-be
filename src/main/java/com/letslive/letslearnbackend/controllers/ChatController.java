@@ -14,7 +14,7 @@ import org.springframework.stereotype.Controller;
 public class ChatController {
     private final MessageService messageService;
 
-    @MessageMapping("/sendMessage")
+    @MessageMapping("/sendMessage/{conversationId}")
     @SendTo("/topic/conversation/{conversationId}")
     public GetMessageDTO sendMessage(@Payload CreateMessageDTO message) {
         return messageService.saveMessage(message.getConversationId(), message);
