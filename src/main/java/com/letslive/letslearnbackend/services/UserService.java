@@ -55,7 +55,7 @@ public class UserService {
 
         List<Course> courses = null;
 
-        if (user.getRole() == "TEACHER") {
+        if (user.getRole().equals("TEACHER")) {
             courses = courseRepository.findByCreatorId(user.getId());
         } else {
             courses = user.getEnrollmentDetails().stream().map(EnrollmentDetail::getCourse).toList();
@@ -246,5 +246,9 @@ public class UserService {
             case "Last Grade" -> marks.isEmpty() ? 0.0 : marks.get(marks.size() - 1);
             default -> throw new IllegalArgumentException("Invalid method: " + method);
         };
+    }
+    public List<UserDTO> getAllUsers (UUID userId) {
+        List<User> res = userRepository.findAll().stream().filter(u -> !u.getId().equals(userId)).toList();
+        return res.stream().map(UserMapper::mapToDTO).toList();
     }
 }

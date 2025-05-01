@@ -81,4 +81,9 @@ public class UserController {
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return ResponseEntity.ok(userService.getStudentReport(vo.getUserID(), courseId, start, end));
     }
+    @GetMapping ("/all")
+    public ResponseEntity<List<UserDTO>> getAllUsers () {
+        JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        return ResponseEntity.ok(userService.getAllUsers(vo.getUserID()));
+    }
 }
