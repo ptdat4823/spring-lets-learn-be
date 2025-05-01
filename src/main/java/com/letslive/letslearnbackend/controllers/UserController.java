@@ -1,6 +1,7 @@
 package com.letslive.letslearnbackend.controllers;
 
 import com.letslive.letslearnbackend.dto.*;
+import com.letslive.letslearnbackend.repositories.EnrollmentDetailRepository;
 import com.letslive.letslearnbackend.security.JwtTokenVo;
 import com.letslive.letslearnbackend.security.SecurityUtils;
 import com.letslive.letslearnbackend.services.AuthService;
@@ -24,6 +25,7 @@ import java.util.UUID;
 public class UserController {
     private final UserService userService;
     private final AuthService authService;
+    private final EnrollmentDetailRepository enrollmentDetailRepository;
 
     @GetMapping("/work")
     public ResponseEntity<List<TopicDTO>> getAllWorksOfUser(
@@ -81,9 +83,17 @@ public class UserController {
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return ResponseEntity.ok(userService.getStudentReport(vo.getUserID(), courseId, start, end));
     }
+
     @GetMapping ("/all")
     public ResponseEntity<List<UserDTO>> getAllUsers () {
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return ResponseEntity.ok(userService.getAllUsers(vo.getUserID()));
+    }
+
+    @DeleteMapping("/leave")
+    public ResponseEntity<Void> leaveCourse(@RequestParam UUID courseId) {
+        JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        enrollmentDetailRepository.deleteByStudentIdAndCourseId(vo.getUserID(), courseId);
+        return ResponseEntity.noContent().build();
     }
 }
