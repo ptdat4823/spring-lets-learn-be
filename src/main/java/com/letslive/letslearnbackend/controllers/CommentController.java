@@ -24,7 +24,7 @@ public class CommentController {
         return ResponseEntity.ok(commentService.addComment(vo.getUserID(), topicId, commentDTO));
     }
 
-    @GetMapping("/{sectionId}")
+    @GetMapping()
     public ResponseEntity<List<CommentDTO>> getComments(@PathVariable(name = "topicId") UUID topicId) {
         List<CommentDTO> comments = commentService.getCommentsByTopic(topicId);
         return ResponseEntity.ok(comments);
