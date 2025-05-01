@@ -10,12 +10,12 @@ import com.letslive.letslearnbackend.mappers.MessageMapper;
 import com.letslive.letslearnbackend.repositories.ConversationRepository;
 import com.letslive.letslearnbackend.repositories.MessageRepository;
 import com.letslive.letslearnbackend.repositories.UserRepository;
+import com.letslive.letslearnbackend.utils.TimeUtils;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,7 +41,7 @@ public class MessageService {
         messageEntity.setSender(sender);
         Message savedMessage = messageRepository.save(messageEntity);
 
-        conversation.setUpdatedAt(LocalDateTime.now());
+        conversation.setUpdatedAt(TimeUtils.getCurrentTimeGMT7());
         conversationRepository.save(conversation);
 
         return MessageMapper.mapToGetMessageDTO(savedMessage);

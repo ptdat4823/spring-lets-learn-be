@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.letslive.letslearnbackend.entities.RefreshToken;
 import com.letslive.letslearnbackend.entities.User;
 import com.letslive.letslearnbackend.exception.CustomException;
+import com.letslive.letslearnbackend.utils.TimeUtils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
@@ -19,7 +20,6 @@ import org.springframework.util.Assert;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
@@ -51,8 +51,8 @@ public class SecurityUtils {
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUser(user);
         refreshToken.setValue(token);
-        refreshToken.setExpiresAt(LocalDateTime.now().plusSeconds(REFRESH_TOKEN_EXPIRE_TIME_IN_SECOND));
-        refreshToken.setCreatedAt(LocalDateTime.now());
+        refreshToken.setExpiresAt(TimeUtils.getCurrentTimeGMT7().plusSeconds(REFRESH_TOKEN_EXPIRE_TIME_IN_SECOND));
+        refreshToken.setCreatedAt(TimeUtils.getCurrentTimeGMT7());
 
         return refreshToken;
     }

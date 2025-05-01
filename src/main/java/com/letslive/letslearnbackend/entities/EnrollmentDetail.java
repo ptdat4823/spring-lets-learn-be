@@ -1,5 +1,6 @@
 package com.letslive.letslearnbackend.entities;
 
+import com.letslive.letslearnbackend.utils.TimeUtils;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -28,6 +29,6 @@ public class EnrollmentDetail {
     private LocalDateTime joinDate;
 
     public EnrollmentDetail() {
-        this.joinDate = LocalDateTime.now(); // Automatically set the join date when created
+        this.joinDate = TimeUtils.getCurrentTimeGMT7(); // Automatically set the join date when created
     }
 }

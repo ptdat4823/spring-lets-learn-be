@@ -1,5 +1,6 @@
 package com.letslive.letslearnbackend.entities;
 
+import com.letslive.letslearnbackend.utils.TimeUtils;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -22,7 +23,7 @@ public class Message {
     private String content;
 
     @Column(nullable = false)
-    private LocalDateTime timestamp = LocalDateTime.now();
+    private LocalDateTime timestamp = TimeUtils.getCurrentTimeGMT7();
 
 //    @Column(nullable = false)
 //    private boolean isRead = false;

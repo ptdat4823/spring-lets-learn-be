@@ -1,5 +1,6 @@
 package com.letslive.letslearnbackend.entities;
 
+import com.letslive.letslearnbackend.utils.TimeUtils;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -24,5 +25,5 @@ public class Comment {
     @ManyToOne(optional = false)
     private Topic topic;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt = TimeUtils.getCurrentTimeGMT7();
 }

@@ -207,7 +207,7 @@ public class CourseService {
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
         List<SingleAssignmentReportDTO> singleAssignmentReportDTOs = new ArrayList<>();
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TimeUtils.getCurrentTimeGMT7();
         LocalDateTime monthStart = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
         LocalDateTime monthEnd = now.withDayOfMonth(now.toLocalDate().lengthOfMonth())
                 .withHour(23).withMinute(59).withSecond(59);

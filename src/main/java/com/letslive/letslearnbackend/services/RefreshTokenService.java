@@ -5,12 +5,11 @@ import com.letslive.letslearnbackend.entities.User;
 import com.letslive.letslearnbackend.exception.CustomException;
 import com.letslive.letslearnbackend.repositories.RefreshTokenRepository;
 import com.letslive.letslearnbackend.security.SecurityUtils;
+import com.letslive.letslearnbackend.utils.TimeUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +35,7 @@ public class RefreshTokenService {
                 .findByValue(token)
                 .orElseThrow(() -> new CustomException("Refresh token not found!", HttpStatus.NOT_FOUND));
 
-        if (refreshToken.getExpiresAt().compareTo(LocalDateTime.now()) < 0) {
+        if (refreshToken.getExpiresAt().isBefore(TimeUtils.getCurrentTimeGMT7())) {
             throw new CustomException("Refresh token expired, please log in again.", HttpStatus.UNAUTHORIZED);
         }
 
