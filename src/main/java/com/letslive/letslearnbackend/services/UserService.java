@@ -181,14 +181,15 @@ public class UserService {
         report.setAvgQuizMark(quizTopicIdWithMarkBase10.values().stream().mapToDouble(Double::doubleValue).average().orElse(0.0));
         report.setAvgAssignmentMark(assignmentResponses.stream().filter(res -> res.getMark() != null).mapToDouble(AssignmentResponse::getMark).average().orElse(0.0));
 
-        report.setTopTopicQuiz(quizResponses.stream().map(q -> {
-            QuizResponse latestResponse = quizResponses.stream().filter(r -> r.getStudent().getId().equals(userId)).max(Comparator.comparing(QuizResponse::getCompletedAt)).orElse(null);
+        report.setTopTopicQuiz(quizTopicIdWithMarkBase10.keySet().stream().map(tId -> {
+            QuizResponse latestResponse = quizResponses.stream().filter(q -> q.getTopicId().equals(tId)).max(Comparator.comparing(QuizResponse::getCompletedAt)).orElse(null);
             return new StudentReportDTO.TopicInfo(
-                    TopicMapper.toDTO(topics.stream().filter(t -> t.getId().equals(q.getTopicId())).findFirst().orElseThrow(() -> new CustomException("Please god dont bug", HttpStatus.INTERNAL_SERVER_ERROR))),
-                    latestResponse != null ? latestResponse.getId() : null,
-                    quizTopicIdWithMarkBase10.get(q.getTopicId()),
-                    latestResponse != null ? latestResponse.getCompletedAt() : null);
-        }).toList());
+                TopicMapper.toDTO(topics.stream().filter(t -> t.getId().equals(tId)).findFirst().orElseThrow(() -> new CustomException("Please god dont bug", HttpStatus.INTERNAL_SERVER_ERROR))),
+                latestResponse != null ? latestResponse.getId() : null,
+                quizTopicIdWithMarkBase10.get(tId),
+                latestResponse != null ? latestResponse.getCompletedAt() : null
+            );}
+        ).toList());
 
         report.setTopTopicAssignment(assignmentResponses.stream().map(a -> {
             AssignmentResponse resp = assignmentResponses.stream().filter(res -> res.getTopicId().equals(a.getTopicId())).findFirst().orElseThrow(() -> new CustomException("Please god dont bug part 2", HttpStatus.INTERNAL_SERVER_ERROR));
