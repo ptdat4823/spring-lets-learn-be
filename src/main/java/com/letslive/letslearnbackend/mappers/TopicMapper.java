@@ -10,6 +10,7 @@ public class TopicMapper {
                 .id(topicDTO.getId())
                 .sectionId(topicDTO.getSectionId())
                 .title(topicDTO.getTitle())
+                .studentCount(topicDTO.getStudentCount())
                 .type(topicDTO.getType());
 
         return builder.build();
@@ -21,6 +22,7 @@ public class TopicMapper {
                 .id(topic.getId())
                 .sectionId(topic.getSectionId())
                 .title(topic.getTitle())
+                .studentCount(topic.getStudentCount())
                 .type(topic.getType());
 
         return builder.build();

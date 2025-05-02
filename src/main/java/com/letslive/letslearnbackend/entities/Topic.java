@@ -20,6 +20,9 @@ public class Topic {
     private String title;
     private String type;
 
+    @Transient
+    private Number studentCount;
+
     @Column(name = "section_id")
     private UUID sectionId;
 }
