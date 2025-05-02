@@ -6,6 +6,7 @@ import com.letslive.letslearnbackend.security.JwtTokenVo;
 import com.letslive.letslearnbackend.security.SecurityUtils;
 import com.letslive.letslearnbackend.services.AuthService;
 import com.letslive.letslearnbackend.services.UserService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
@@ -91,6 +92,7 @@ public class UserController {
     }
 
     @DeleteMapping("/leave")
+    @Transactional
     public ResponseEntity<Void> leaveCourse(@RequestParam UUID courseId) {
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         enrollmentDetailRepository.deleteByStudentIdAndCourseId(vo.getUserID(), courseId);
