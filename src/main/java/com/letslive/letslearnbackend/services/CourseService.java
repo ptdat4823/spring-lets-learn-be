@@ -252,10 +252,10 @@ public class CourseService {
         reportDTO.setMarkDistributionCount(mergeMarkDistributionCount(singleAssignmentReportDTOs.stream().map(SingleAssignmentReportDTO::getMarkDistributionCount).toList()));
         reportDTO.setStudentInfoWithMarkAverage(studentInfoWithAverageMarks);
 
-        reportDTO.setStudentWithMarkOver8(studentInfoWithAverageMarks.stream().filter(info -> info.getAverageMark() != null && info.getAverageMark() >= 8.0).toList());
-        reportDTO.setStudentWithMarkOver5(studentInfoWithAverageMarks.stream().filter(info -> info.getAverageMark() != null && info.getAverageMark() >= 5.0 && info.getAverageMark() < 8.0).toList());
-        reportDTO.setStudentWithMarkOver2(studentInfoWithAverageMarks.stream().filter(info -> info.getAverageMark() != null && info.getAverageMark() >= 2.0 && info.getAverageMark() < 5.0).toList());
-        reportDTO.setStudentWithMarkOver0(studentInfoWithAverageMarks.stream().filter(info -> info.getAverageMark() != null && info.getAverageMark() < 2.0).toList());
+        reportDTO.setStudentWithMarkOver8(studentInfoWithAverageMarks.stream().filter(info -> info.getSubmitted() && info.getAverageMark() != null && info.getAverageMark() >= 8.0).toList());
+        reportDTO.setStudentWithMarkOver5(studentInfoWithAverageMarks.stream().filter(info -> info.getSubmitted() && info.getAverageMark() != null && info.getAverageMark() >= 5.0 && info.getAverageMark() < 8.0).toList());
+        reportDTO.setStudentWithMarkOver2(studentInfoWithAverageMarks.stream().filter(info -> info.getSubmitted() && info.getAverageMark() != null && info.getAverageMark() >= 2.0 && info.getAverageMark() < 5.0).toList());
+        reportDTO.setStudentWithMarkOver0(studentInfoWithAverageMarks.stream().filter(info -> info.getSubmitted() && info.getAverageMark() != null && info.getAverageMark() < 2.0).toList());
         reportDTO.setStudentWithNoResponse(studentInfoWithAverageMarks.stream().filter(info -> !info.getSubmitted()).toList());
 
         reportDTO.setFileTypeCount(singleAssignmentReportDTOs.stream().map(SingleAssignmentReportDTO::getFileTypeCount)
