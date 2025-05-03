@@ -24,6 +24,7 @@ public class AllAssignmentsReportDTO {
         Boolean submitted;
     }
 
+    private Number assignmentsCountInProgress = 0;
     private Number assignmentCount = 0;
 
     private Double avgMark = 0.0;

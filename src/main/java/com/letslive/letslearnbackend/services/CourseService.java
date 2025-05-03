@@ -211,7 +211,8 @@ public class CourseService {
         LocalDateTime monthStart = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
         LocalDateTime monthEnd = now.withDayOfMonth(now.toLocalDate().lengthOfMonth())
                 .withHour(23).withMinute(59).withSecond(59);
-        final AtomicInteger[] assignmentsEndingThisMonth = {new AtomicInteger()};
+        final AtomicInteger[] assignmentsEndingThisMonth = {new AtomicInteger(0)};
+        final AtomicInteger[] assignmentsInProgressCounter = {new AtomicInteger(0)};
         final LocalDateTime[] nextClosestEndTime = {null};
 
         course.getSections().forEach(courseSection -> {
@@ -230,6 +231,10 @@ public class CourseService {
                             assignmentsEndingThisMonth[0].getAndIncrement();
                         }
 
+                        if (topicEnd.isAfter(now)) {
+                            assignmentsInProgressCounter[0].getAndIncrement();
+                        }
+
                         // Find next closest end time
                         if (topicEnd.isAfter(now)) {
                             if (nextClosestEndTime[0] == null || topicEnd.isBefore(nextClosestEndTime[0])) {
@@ -244,6 +249,7 @@ public class CourseService {
         List<AllAssignmentsReportDTO.StudentInfoWithAverageMark> studentInfoWithAverageMarks = calculateAverageStudentScoreForAssignments(singleAssignmentReportDTOs);
         AllAssignmentsReportDTO reportDTO = new AllAssignmentsReportDTO();
 
+        reportDTO.setAssignmentsCountInProgress(assignmentsInProgressCounter[0]);
         reportDTO.setAssignmentCount(singleAssignmentReportDTOs.size());
         reportDTO.setAvgMark(singleAssignmentReportDTOs.stream().mapToDouble(SingleAssignmentReportDTO::getAvgMark).average().orElse(0.0));
         reportDTO.setAvgCompletionRate(singleAssignmentReportDTOs.stream().mapToDouble(SingleAssignmentReportDTO::getCompletionRate).average().orElse(0.0));
@@ -299,7 +305,6 @@ public class CourseService {
         reportDTO.setMinStudentScoreBase10(singleQuizReportDTOs.stream().mapToDouble(SingleQuizReportDTO::getMinStudentMarkBase10).min().orElse(0));
         reportDTO.setMaxStudentScoreBase10(singleQuizReportDTOs.stream().mapToDouble(SingleQuizReportDTO::getMaxStudentMarkBase10).max().orElse(0));
         reportDTO.setStudentInfoWithMarkAverage(studentInfoAndMarks);
-        reportDTO.setStudentWithMark
         reportDTO.setStudentWithMarkOver8(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() >= 8.0).toList());
         reportDTO.setStudentWithMarkOver5(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() >= 5.0 && info.getMark() < 8.0).toList());
         reportDTO.setStudentWithMarkOver2(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() >= 2.0 && info.getMark() < 5.0).toList());
