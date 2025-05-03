@@ -6,6 +6,7 @@ import com.letslive.letslearnbackend.security.JwtTokenVo;
 import com.letslive.letslearnbackend.security.SecurityUtils;
 import com.letslive.letslearnbackend.services.AuthService;
 import com.letslive.letslearnbackend.services.UserService;
+import com.letslive.letslearnbackend.utils.TimeUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -34,6 +35,8 @@ public class UserController {
             @RequestParam(required = false) UUID courseId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
+        if (start != null) start = TimeUtils.convertDateToGMT7Date(start);
+        if (end != null) end = TimeUtils.convertDateToGMT7Date(end);
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return ResponseEntity.ok(userService.getAllWorksOfUser(vo.getUserID(), type, start, end));
     }
@@ -81,6 +84,8 @@ public class UserController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end
     ) {
+        if (start != null) start = TimeUtils.convertDateToGMT7Date(start);
+        if (end != null) end = TimeUtils.convertDateToGMT7Date(end);
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return ResponseEntity.ok(userService.getStudentReport(vo.getUserID(), courseId, start, end));
     }

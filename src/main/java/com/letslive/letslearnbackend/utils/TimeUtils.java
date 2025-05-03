@@ -30,4 +30,8 @@ public class TimeUtils {
         // Return the LocalDateTime representation in GMT+7
         return gmt7ZonedDateTime.toLocalDateTime();
     }
+
+    public static LocalDateTime convertDateToGMT7Date(LocalDateTime isoDate) {
+            return isoDate.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneId.of("GMT+7")).toLocalDateTime();
+    }
 }

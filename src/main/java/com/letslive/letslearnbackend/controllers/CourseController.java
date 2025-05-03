@@ -6,6 +6,7 @@ import com.letslive.letslearnbackend.security.JwtTokenVo;
 import com.letslive.letslearnbackend.security.SecurityUtils;
 import com.letslive.letslearnbackend.services.CourseService;
 import com.letslive.letslearnbackend.services.UserService;
+import com.letslive.letslearnbackend.utils.TimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -49,6 +50,8 @@ public class CourseController {
             @RequestParam(required = false) String type,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
+        if (start != null) start = TimeUtils.convertDateToGMT7Date(start);
+        if (end != null) end = TimeUtils.convertDateToGMT7Date(end);
         JwtTokenVo vo = SecurityUtils.GetJwtTokenVoFromPrinciple(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return ResponseEntity.ok(courseService.getAllWorksOfCourseAndUser(id, vo.getUserID(), type, start, end));
     }
@@ -78,18 +81,22 @@ public class CourseController {
     @GetMapping(value = "/{courseId}/quiz-report")
     public ResponseEntity<AllQuizzesReportDTO> getAllQuizzesReport(
             @PathVariable UUID courseId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end
     ) {
-        return ResponseEntity.ok(courseService.getQuizzesReport(courseId, startTime, endTime));
+        if (start != null) start = TimeUtils.convertDateToGMT7Date(start);
+        if (end != null) end = TimeUtils.convertDateToGMT7Date(end);
+        return ResponseEntity.ok(courseService.getQuizzesReport(courseId, start, end));
     }
 
     @GetMapping(value = "/{courseId}/assignment-report")
     public ResponseEntity<AllAssignmentsReportDTO> getAllAssignmentReport(
             @PathVariable UUID courseId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end
     ) {
-        return ResponseEntity.ok(courseService.getAssignmentsReport(courseId, startTime, endTime));
+        if (start != null) start = TimeUtils.convertDateToGMT7Date(start);
+        if (end != null) end = TimeUtils.convertDateToGMT7Date(end);
+        return ResponseEntity.ok(courseService.getAssignmentsReport(courseId, start, end));
     }
 }
