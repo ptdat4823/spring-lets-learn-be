@@ -434,27 +434,35 @@ public class TopicService {
         int studentCount = studentsThatTookPartIn.size();
 
         Map<UUID, Double> marksWithStudentId = quizResponses.stream()
-                .flatMap(responseDTO -> responseDTO.getAnswers().stream().map(answer -> {
-                    try {
-                        Question question = mapper.readValue(answer.getQuestion(), Question.class);
-                        double normalizedMark = (answer.getMark() / question.getDefaultMark()) * 10; // Normalize to base 10
-                        return new AbstractMap.SimpleEntry<>(responseDTO.getStudent().getId(), normalizedMark);
-                    } catch (JsonProcessingException e) {
-                        throw new CustomException("Error parsing question data: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-                    }
-                }))
+                .map(responseDTO -> {
+                    // First calculate average mark for this response
+                    double responseMark = responseDTO.getAnswers().stream()
+                            .map(answer -> {
+                                try {
+                                    Question question = mapper.readValue(answer.getQuestion(), Question.class);
+                                    return (answer.getMark() / question.getDefaultMark()) * 10; // Normalize to base 10
+                                } catch (JsonProcessingException e) {
+                                    throw new CustomException("Error parsing question data: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+                                }
+                            })
+                            .mapToDouble(Double::doubleValue)
+                            .average()
+                            .orElse(0.0);
+
+                    return new AbstractMap.SimpleEntry<>(responseDTO.getStudent().getId(), responseMark);
+                })
                 .collect(Collectors.groupingBy(
                         Map.Entry::getKey, // Group by studentId
                         Collectors.mapping(
-                                Map.Entry::getValue, // Extract the marks
+                                Map.Entry::getValue, // Extract the response-level marks
                                 Collectors.toList() // Collect marks into a list
                         )
                 ))
                 .entrySet()
                 .stream()
                 .collect(Collectors.toMap(
-                        Map.Entry::getKey, // Keep the studentId as the key
-                        entry -> calculateMark(entry.getValue(), topicQuiz.getGradingMethod()) // Calculate the grade based on the method
+                        Map.Entry::getKey,
+                        entry -> calculateMark(entry.getValue(), topicQuiz.getGradingMethod())
                 ));
 
         double avgMark = marksWithStudentId.values().stream()
