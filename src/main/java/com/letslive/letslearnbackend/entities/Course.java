@@ -22,7 +22,8 @@ public class Course {
     @Id
     @GeneratedValue(generator = "UUID")
     private UUID id;
-    
+
+    @Column(unique = true)
     private String title;
     private String description;
 
