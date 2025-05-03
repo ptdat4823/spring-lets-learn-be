@@ -370,19 +370,19 @@ public class TopicService {
             return new SingleAssignmentReportDTO(topic.getTitle());
         }
 
-        Map<UUID, Pair<Double, UUID>> studentWithMarkAndResponseId = assignmentResponses.stream()
+        Map<UUID, Pair<Double, UUID>> studentWithMarkBase10AndResponseId = assignmentResponses.stream()
                 .filter(resp -> resp.getMark() != null)
                 .collect(Collectors.toMap(
                         resp -> resp.getStudent().getId(),
-                        resp -> new Pair<>(resp.getMark(), resp.getId())
+                        resp -> new Pair<>(resp.getMark() / 10, resp.getId()) // getMark / 100 * 10
                 ));
 
         // same as above but without the response id
-        Map<UUID, Double> studentWithMarks = assignmentResponses.stream()
+        Map<UUID, Double> studentWithMarkBase10 = assignmentResponses.stream()
                 .filter(resp -> resp.getMark() != null)
                 .collect(Collectors.toMap(
                         resp -> resp.getStudent().getId(),
-                        AssignmentResponse::getMark
+                        resp -> resp.getMark() / 10
                 ));
 
         Map<String, Long> fileTypeCount = assignmentResponses.stream()
@@ -397,7 +397,7 @@ public class TopicService {
                         Collectors.counting()
                 ));
 
-        List<SingleAssignmentReportDTO.StudentInfoAndMark> studentInfoAndMarks = getStudentInfoWithMarkAndResponseIdForAssignment(studentsThatTookPartIn, studentWithMarkAndResponseId);
+        List<SingleAssignmentReportDTO.StudentInfoAndMark> studentInfoAndMarks = getStudentInfoWithMarkAndResponseIdForAssignment(studentsThatTookPartIn, studentWithMarkBase10AndResponseId);
 
         SingleAssignmentReportDTO reportDTO = new SingleAssignmentReportDTO();
         reportDTO.setName(topic.getTitle());
@@ -410,7 +410,7 @@ public class TopicService {
         reportDTO.setStudentWithMarkOver0(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() < 2.0).toList());
         reportDTO.setStudentWithNoResponse(studentInfoAndMarks.stream().filter(info -> !info.getSubmitted()).toList());
 
-        reportDTO.setMarkDistributionCount(calculateMarkDistribution(studentWithMarks, studentCount));
+        reportDTO.setMarkDistributionCount(calculateMarkDistribution(studentWithMarkBase10, studentCount));
         reportDTO.setSubmissionCount(assignmentResponses.size());
         reportDTO.setGradedSubmissionCount(assignmentResponses.stream().filter(res -> res.getMark() != null).count());
         reportDTO.setFileCount(assignmentResponses.stream().mapToInt(res -> res.getCloudinaryFiles() != null ? res.getCloudinaryFiles().size() : 0).sum());
@@ -538,9 +538,9 @@ public class TopicService {
 
         // Count how many marks fall into each range
         long count8OrMore = allMarks.stream().filter(mark -> mark >= 8).count();
-        long count5To7 = allMarks.stream().filter(mark -> mark >= 5 && mark < 8).count();
-        long count2To4 = allMarks.stream().filter(mark -> mark >= 2 && mark < 5).count();
-        long count0To1 = allMarks.stream().filter(mark -> mark >= 0 && mark < 2).count();
+        long count5To7 = allMarks.stream().filter(mark -> mark >= 5 && mark < 8.0).count();
+        long count2To4 = allMarks.stream().filter(mark -> mark >= 2 && mark < 5.0).count();
+        long count0To1 = allMarks.stream().filter(mark -> mark >= 0.0 && mark < 2.0).count();
 
         Map<Number, Number> percentageMap = new HashMap<>();
         percentageMap.put(8, count8OrMore);
@@ -600,7 +600,7 @@ public class TopicService {
 
     public List<SingleAssignmentReportDTO.StudentInfoAndMark> getStudentInfoWithMarkAndResponseIdForAssignment(
             List<EnrollmentDetail> studentsThatTookPartIn,
-            Map<UUID, Pair<Double, UUID>> studentIdWithMarkAndResponseId
+            Map<UUID, Pair<Double, UUID>> studentIdWithMarkBase10AndResponseId
     ) {
         // First, create a map of enrollment details by student ID for easier lookup
         Map<UUID, EnrollmentDetail> enrollmentByStudentId = studentsThatTookPartIn.stream()
@@ -610,7 +610,7 @@ public class TopicService {
                 ));
 
         // Create StudentInfoAndMark objects for students with marks
-        List<SingleAssignmentReportDTO.StudentInfoAndMark> studentsWithMarks = studentIdWithMarkAndResponseId.entrySet().stream()
+        List<SingleAssignmentReportDTO.StudentInfoAndMark> studentsWithMarks = studentIdWithMarkBase10AndResponseId.entrySet().stream()
                 .map(entry -> {
                     UUID studentId = entry.getKey();
                     Double mark = entry.getValue().a;
@@ -626,7 +626,7 @@ public class TopicService {
 
         // Create StudentInfoAndMark objects for students with no response
         List<SingleAssignmentReportDTO.StudentInfoAndMark> studentsNoResponse = enrollmentByStudentId.entrySet().stream()
-                .filter(entry -> !studentIdWithMarkAndResponseId.containsKey(entry.getKey()))
+                .filter(entry -> !studentIdWithMarkBase10AndResponseId.containsKey(entry.getKey()))
                 .map(entry -> {
                     SingleAssignmentReportDTO.StudentInfoAndMark info = new SingleAssignmentReportDTO.StudentInfoAndMark();
                     info.setStudent(UserMapper.mapToDTO(entry.getValue().getStudent()));
