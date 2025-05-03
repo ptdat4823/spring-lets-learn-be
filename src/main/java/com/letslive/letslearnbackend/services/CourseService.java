@@ -312,10 +312,10 @@ public class CourseService {
         reportDTO.setMaxStudentScoreBase10(singleQuizReportDTOs.stream().mapToDouble(SingleQuizReportDTO::getMaxStudentMarkBase10).max().orElse(0));
         reportDTO.setStudentInfoWithMarkAverage(studentInfoAndMarks);
 
-        reportDTO.setStudentWithMarkOver8(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() >= 8.0).toList());
-        reportDTO.setStudentWithMarkOver5(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() >= 5.0 && info.getMark() < 8.0).toList());
-        reportDTO.setStudentWithMarkOver2(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() >= 2.0 && info.getMark() < 5.0).toList());
-        reportDTO.setStudentWithMarkOver0(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() < 2.0).toList());
+        reportDTO.setStudentWithMarkOver8(studentInfoAndMarks.stream().filter(info -> info.getSubmitted() && info.getMark() != null && info.getMark() >= 8.0).toList());
+        reportDTO.setStudentWithMarkOver5(studentInfoAndMarks.stream().filter(info -> info.getSubmitted() && info.getMark() != null && info.getMark() >= 5.0 && info.getMark() < 8.0).toList());
+        reportDTO.setStudentWithMarkOver2(studentInfoAndMarks.stream().filter(info -> info.getSubmitted() && info.getMark() != null && info.getMark() >= 2.0 && info.getMark() < 5.0).toList());
+        reportDTO.setStudentWithMarkOver0(studentInfoAndMarks.stream().filter(info -> info.getSubmitted() && info.getMark() != null && info.getMark() < 2.0).toList());
         reportDTO.setStudentWithNoResponse(studentInfoAndMarks.stream().filter(info -> !info.getSubmitted()).toList());
         reportDTO.setMarkDistributionCount(mergeMarkDistributionCount(singleQuizReportDTOs.stream().map(SingleQuizReportDTO::getMarkDistributionCount).toList()));
         reportDTO.setSingleQuizReports(singleQuizReportDTOs);
