@@ -428,6 +428,7 @@ public class TopicService {
         SingleQuizReportDTO reportDTO = new SingleQuizReportDTO();
 
         TopicQuiz topicQuiz = topicQuizRepository.findByTopicId(topic.getId()).orElseThrow(() -> new CustomException("No topic quiz found!", HttpStatus.NOT_FOUND));
+        List<TopicQuizQuestion> quizQuestions = topicQuizQuestionRepository.findAllByTopicQuizId(topicQuiz.getId());
         List<QuizResponseDTO> quizResponses = quizResponseService.getAllQuizResponsesByTopicId(topicQuiz.getTopicId());
         LocalDateTime topicEndTime = topicQuiz.getClose() == null ? TimeUtils.MAX : TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose());
         List<EnrollmentDetail> studentsThatTookPartIn = enrollmentDetailRepository.findByCourseIdAndJoinDateLessThanEqual(courseId, topicEndTime);
@@ -501,9 +502,9 @@ public class TopicService {
         reportDTO.setAvgTimeSpend(calculateAvgTimeSpend(quizResponses));
         reportDTO.setCompletionRate(((double)marksWithStudentId.entrySet().size()) / ((double)studentCount));
         reportDTO.setStudents(studentsThatTookPartIn.stream().map(detail -> UserMapper.mapToDTO(detail.getStudent())).toList());
-        reportDTO.setTrueFalseQuestionCount(countQuestionType(quizResponses, "True/False"));
-        reportDTO.setMultipleChoiceQuestionCount(countQuestionType(quizResponses, "Choices Answer"));
-        reportDTO.setShortAnswerQuestionCount(countQuestionType(quizResponses, "Short Answer"));
+        reportDTO.setTrueFalseQuestionCount(countQuestionType(quizQuestions, "True/False"));
+        reportDTO.setMultipleChoiceQuestionCount(countQuestionType(quizQuestions, "Choices Answer"));
+        reportDTO.setShortAnswerQuestionCount(countQuestionType(quizQuestions, "Short Answer"));
 
         return reportDTO;
     }
@@ -526,17 +527,9 @@ public class TopicService {
                 .orElse(0.0);
     }
 
-    private Number countQuestionType(List<QuizResponseDTO> quizResponses, String questionType) {
-        return quizResponses.stream()
-                .flatMap(responseDTO -> responseDTO.getAnswers().stream())
-                .mapToInt(answer -> {
-                    try {
-                        Question question = mapper.readValue(answer.getQuestion(), Question.class);
-                        return question.getType().equals(questionType) ? 1 : 0;
-                    } catch (JsonProcessingException e) {
-                        throw new CustomException("Error parsing question data: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-                    }
-                })
+    private Number countQuestionType(List<TopicQuizQuestion> questions, String questionType) {
+        return questions.stream()
+                .mapToInt(q -> q.getType().equals(questionType) ? 1 : 0)
                 .sum();
     }
 
