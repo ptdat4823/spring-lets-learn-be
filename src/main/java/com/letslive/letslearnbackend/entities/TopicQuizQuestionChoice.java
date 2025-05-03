@@ -30,6 +30,6 @@ public class TopicQuizQuestionChoice {
     @JsonProperty("feedback")
     private String feedback;
 
-    @Column(name = "quiz_question_id", nullable = false)
+    @Column(name = "quiz_question_id", nullable = true)
     private UUID questionId;
 }

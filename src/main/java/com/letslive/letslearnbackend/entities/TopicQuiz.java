@@ -54,8 +54,7 @@ public class TopicQuiz {
 
     //@Column(columnDefinition = "jsonb")
     //@Convert(converter = JsonbConverter.class)
-    @OneToMany
-    @JoinColumn(name = "topic_quiz_id", referencedColumnName = "id")
+    @OneToMany(mappedBy = "topicQuizId", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonProperty("questions")
     private List<TopicQuizQuestion> questions;
 }

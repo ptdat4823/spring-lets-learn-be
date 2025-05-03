@@ -14,6 +14,7 @@ import com.letslive.letslearnbackend.mappers.TopicMapper;
 import com.letslive.letslearnbackend.mappers.UserMapper;
 import com.letslive.letslearnbackend.repositories.*;
 import com.letslive.letslearnbackend.utils.TimeUtils;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.misc.Pair;
 import org.springframework.http.HttpStatus;
@@ -38,10 +39,7 @@ public class TopicService {
     private final TopicLinkRepository topicLinkRepository;
     private final TopicPageRepository topicPageRepository;
     private final QuizResponseService quizResponseService;
-    private final CourseRepository courseRepository;
-    private final UserRepository userRepository;
     private final EnrollmentDetailRepository enrollmentDetailRepository;
-    private final AssignmentResponseService assignmentResponseService;
 
     ObjectMapper mapper = new ObjectMapper()
             .registerModule(new ParameterNamesModule())
@@ -153,6 +151,7 @@ public class TopicService {
         return createdTopicDTO;
     }
 
+    @Transactional
     public TopicDTO updateTopic(TopicDTO topicDTO) {
         if (!topicRepository.existsById(topicDTO.getId())) {
             throw new CustomException("No topic found!", HttpStatus.NOT_FOUND);
@@ -169,43 +168,47 @@ public class TopicService {
         switch (topicDTO.getType().toLowerCase()) {
             case "quiz":
                 try {
-                    // update the topic quiz metadata
                     TopicQuiz topicQuiz = mapper.readValue(topicDTO.getData(), TopicQuiz.class);
-                    topicQuizRepository.findById(topicQuiz.getId()).orElseThrow(() -> new CustomException("No topic quiz found!", HttpStatus.NOT_FOUND));
-                    topicQuizRepository.save(topicQuiz);
 
-                    // remove every questions and choices in topic quiz
-                    List<TopicQuizQuestion> topicQuizQuestions = topicQuizQuestionRepository.findAllByTopicQuizId(topicQuiz.getId());
-                    topicQuizQuestions.forEach(topicQuizQuestion -> {
-                        topicQuizQuestion.getChoices().forEach(choice -> {
-                            topicQuizQuestionChoiceRepository.deleteById(choice.getId());
-                        });
+                    // Load existing TopicQuiz or throw an exception if not found
+                    TopicQuiz existingQuiz = topicQuizRepository.findById(topicQuiz.getId())
+                            .orElseThrow(() -> new CustomException("No topic quiz found!", HttpStatus.NOT_FOUND));
 
-                        topicQuizQuestionRepository.deleteById(topicQuizQuestion.getId());
-                    });
+                    // Clear the existing questions
+                    existingQuiz.getQuestions().clear();
 
-                    // save the questions and its choices
-                    topicQuiz.getQuestions().forEach(question -> {
-                        question.setId(null);
-                        question.setTopicQuizId(topicQuiz.getId());
-                        UUID createdQuestionId = topicQuizQuestionRepository.save(question).getId();
+                    // Prepare and add new questions
+                    for (TopicQuizQuestion question : topicQuiz.getQuestions()) {
+                        question.setId(null); // Mark as new entity
+                        question.setTopicQuizId(existingQuiz.getId());
 
-                        question.getChoices().forEach(c -> {
-                            c.setId(null); // remove "set id", generate a new id please
-                            c.setQuestionId(createdQuestionId); // Use the ID of the parent question
-                            topicQuizQuestionChoiceRepository.save(c);
-                        });
-                    });
+                        // Detach choices temporarily
+                        List<TopicQuizQuestionChoice> choices = question.getChoices();
+                        question.setChoices(new ArrayList<>());
 
-                    // BUG: RETURNING OLD DATA
-                    topicQuizRepository.flush();
-                    TopicQuiz updatedTopicQuizData = topicQuizRepository.findById(topicQuiz.getId()).orElseThrow(() -> new CustomException("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR));
-                    updatedTopicDTO.setData(mapper.writeValueAsString(updatedTopicQuizData));
+                        // Save the question to generate its ID
+                        TopicQuizQuestion savedQuestion = topicQuizQuestionRepository.save(question);
+
+                        // Reattach choices
+                        for (TopicQuizQuestionChoice choice : choices) {
+                            choice.setId(null); // Mark as new entity
+                            choice.setQuestionId(savedQuestion.getId());
+                            savedQuestion.getChoices().add(choice);
+                        }
+
+                        // Add the saved question back to the quiz
+                        existingQuiz.getQuestions().add(savedQuestion);
+                    }
+
+                    // Save the updated TopicQuiz
+                    topicQuizRepository.save(existingQuiz);
+
                 } catch (JsonProcessingException e) {
                     throw new CustomException("Error parsing quiz data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
                 } catch (Exception e) {
                     throw new CustomException("Something went wrong: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
                 }
+
                 break;
             case "assignment":
                 try {

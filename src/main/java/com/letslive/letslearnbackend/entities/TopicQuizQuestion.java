@@ -54,8 +54,8 @@ public class TopicQuizQuestion {
     @JsonProperty("multiple")
     private boolean multiple; // for multiple choices questions
 
-    @OneToMany
-    @JoinColumn(name = "quiz_question_id", referencedColumnName = "id")
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "quiz_question_id", referencedColumnName = "id" )
     @JsonProperty("choices")
     private List<TopicQuizQuestionChoice> choices; // for choices and short answer question
 }
