@@ -193,8 +193,14 @@ public class CourseService {
                                 });
                             }
                             break;
+                        case "file":
+                            break;
+                        case "link":
+                            break;
+                        case "page":
+                            break;
                         default:
-                            throw new CustomException("Type not found, something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR);
+                            break;
                     }
                 }
             });
@@ -305,6 +311,7 @@ public class CourseService {
         reportDTO.setMinStudentScoreBase10(singleQuizReportDTOs.stream().mapToDouble(SingleQuizReportDTO::getMinStudentMarkBase10).min().orElse(0));
         reportDTO.setMaxStudentScoreBase10(singleQuizReportDTOs.stream().mapToDouble(SingleQuizReportDTO::getMaxStudentMarkBase10).max().orElse(0));
         reportDTO.setStudentInfoWithMarkAverage(studentInfoAndMarks);
+
         reportDTO.setStudentWithMarkOver8(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() >= 8.0).toList());
         reportDTO.setStudentWithMarkOver5(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() >= 5.0 && info.getMark() < 8.0).toList());
         reportDTO.setStudentWithMarkOver2(studentInfoAndMarks.stream().filter(info -> info.getMark() != null && info.getMark() >= 2.0 && info.getMark() < 5.0).toList());
@@ -332,10 +339,10 @@ public class CourseService {
             report.getStudentWithMark().forEach(infoAndMark -> {
                 if (infoAndMark.getStudent() != null && infoAndMark.getSubmitted() && report.getMaxDefaultMark() != null) {
                     UUID studentId = infoAndMark.getStudent().getId();
-                    double percentage = (infoAndMark.getMark() / report.getMaxDefaultMark()) * 10;
+//                    double percentage = (infoAndMark.getMark() / report.getMaxDefaultMark()) * 10;
 
                     // Store the score
-                    studentScoresMap.computeIfAbsent(studentId, k -> new ArrayList<>()).add(percentage);
+                    studentScoresMap.computeIfAbsent(studentId, k -> new ArrayList<>()).add(infoAndMark.getMark());
 
                     // Update or store the latest student info
                     latestStudentInfo.put(studentId, infoAndMark);

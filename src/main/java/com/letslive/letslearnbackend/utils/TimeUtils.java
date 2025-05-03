@@ -31,7 +31,12 @@ public class TimeUtils {
         return gmt7ZonedDateTime.toLocalDateTime();
     }
 
-    public static LocalDateTime convertDateToGMT7Date(LocalDateTime isoDate) {
-            return isoDate.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneId.of("GMT+7")).toLocalDateTime();
-    }
+//    public static LocalDateTime convertDateToGMT7Date(LocalDateTime isoDate) {
+//            return isoDate.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneId.of("GMT+7")).toLocalDateTime();
+//    }
+        public static LocalDateTime convertDateToGMT7Date(LocalDateTime isoDate) {
+            return isoDate.atZone(ZoneId.of("UTC")) // Specify the original timezone
+                    .withZoneSameInstant(ZoneId.of("GMT+7"))
+                    .toLocalDateTime();
+        }
 }

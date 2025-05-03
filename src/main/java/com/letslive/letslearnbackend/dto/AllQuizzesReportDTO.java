@@ -20,7 +20,7 @@ public class AllQuizzesReportDTO {
     private Double minStudentScoreBase10;
     private Double maxStudentScoreBase10;
 
-    @JsonIgnore
+//    @JsonIgnore
     private List<SingleQuizReportDTO.StudentInfoAndMark> studentInfoWithMarkAverage;
 
     private List<SingleQuizReportDTO.StudentInfoAndMark> studentWithMarkOver8;

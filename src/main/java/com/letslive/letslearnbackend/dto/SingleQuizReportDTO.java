@@ -20,7 +20,7 @@ public class SingleQuizReportDTO {
 
     private String name;
 
-    @JsonIgnore // below is for the all quizzes calculation
+//    @JsonIgnore // below is for the all quizzes calculation
     private List<StudentInfoAndMark> studentWithMark = new ArrayList<>();
 
     private List<StudentInfoAndMark> studentWithMarkOver8 = new ArrayList<>();
