@@ -46,8 +46,9 @@ public class UserService {
     }
 
     public List<TopicDTO> getAllWorksOfUser(UUID userId, String type, LocalDateTime start, LocalDateTime end) {
-        if ((start != null || end != null) && (start == null || end == null)) throw new CustomException("Provide start and end time!", HttpStatus.BAD_REQUEST);
-        if (start != null && start.isAfter(end)) throw new CustomException("Start time must be after end time", HttpStatus.BAD_REQUEST);
+        if (start != null && end != null && start.isAfter(end)) throw new CustomException("Start time must be after end time", HttpStatus.BAD_REQUEST);
+        if (start == null) start = TimeUtils.MIN;
+        if (end == null) end = TimeUtils.MAX;
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
@@ -61,6 +62,11 @@ public class UserService {
             courses = user.getEnrollmentDetails().stream().map(EnrollmentDetail::getCourse).toList();
         }
 
+        // this should not happen, use enum for UserRole
+        if (courses == null) throw new CustomException("User role or something has failed!", HttpStatus.INTERNAL_SERVER_ERROR);
+
+        LocalDateTime finalEnd = end;
+        LocalDateTime finalStart = start;
         courses.forEach(course -> {
             course.getSections().forEach(courseSection -> {
                 courseSection.getTopics().forEach(topic -> {
@@ -69,9 +75,15 @@ public class UserService {
                             case "quiz":
                                 if (type == null || type.equals("quiz")) {
                                     topicQuizRepository.findByTopicId(topic.getId()).ifPresent(topicQuiz -> {
-                                        if (end != null) {
-                                            LocalDateTime endTime = TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose());
-                                            if (!endTime.isBefore(end)) return;
+                                        LocalDateTime openTime = topicQuiz.getOpen() != null ? TimeUtils.convertStringToLocalDateTime(topicQuiz.getOpen()) : null;
+                                        LocalDateTime closeTime = topicQuiz.getClose() != null ? TimeUtils.convertStringToLocalDateTime(topicQuiz.getClose()) : null;
+
+                                        if ((openTime == null && closeTime == null) ||
+                                                (closeTime == null && openTime.isAfter(finalEnd)) ||
+                                                (openTime == null && closeTime.isBefore(finalStart)) ||
+                                                (closeTime != null && closeTime.isBefore(finalStart)) ||
+                                                (openTime != null && openTime.isAfter(finalEnd))) {
+                                            return;
                                         }
 
                                         try {
@@ -94,9 +106,15 @@ public class UserService {
                             case "assignment":
                                 if (type == null || type.equals("assignment")) {
                                     topicAssigmentRepository.findByTopicId(topic.getId()).ifPresent(topicAssignment -> {
-                                        if (end != null) {
-                                            LocalDateTime endTime = TimeUtils.convertStringToLocalDateTime(topicAssignment.getClose());
-                                            if (!endTime.isBefore(end)) return;
+                                        LocalDateTime openTime = topicAssignment.getOpen() != null ? TimeUtils.convertStringToLocalDateTime(topicAssignment.getOpen()) : null;
+                                        LocalDateTime closeTime = topicAssignment.getClose() != null ? TimeUtils.convertStringToLocalDateTime(topicAssignment.getClose()) : null;
+
+                                        if ((openTime == null && closeTime == null) ||
+                                                (closeTime == null && openTime.isAfter(finalEnd)) ||
+                                                (openTime == null && closeTime.isBefore(finalStart)) ||
+                                                (closeTime != null && closeTime.isBefore(finalStart)) ||
+                                                (openTime != null && openTime.isAfter(finalEnd))) {
+                                            return;
                                         }
 
                                         try {
@@ -121,10 +139,9 @@ public class UserService {
                             case "meeting":
                                 if (type == null || type.equals("meeting")) {
                                     topicMeetingRepository.findByTopicId(topic.getId()).ifPresent(topicMeeting -> {
-                                        if (end != null) {
-                                            LocalDateTime startTime = TimeUtils.convertStringToLocalDateTime(topicMeeting.getOpen());
-                                            if (!(startTime.isAfter(start) && startTime.isBefore(end))) return;
-                                        }
+                                        LocalDateTime openTime = topicMeeting.getOpen() != null ? TimeUtils.convertStringToLocalDateTime(topicMeeting.getOpen()) : null;
+
+                                        if (openTime == null || openTime.isBefore(finalStart) || openTime.isAfter(finalEnd)) return;
 
                                         try {
                                             String data = mapper.writeValueAsString(topicMeeting);
