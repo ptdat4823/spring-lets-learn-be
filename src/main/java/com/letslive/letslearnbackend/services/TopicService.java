@@ -171,16 +171,16 @@ public class TopicService {
                     TopicQuiz topicQuiz = mapper.readValue(topicDTO.getData(), TopicQuiz.class);
 
                     // Load existing TopicQuiz or throw an exception if not found
-                    TopicQuiz existingQuiz = topicQuizRepository.findById(topicQuiz.getId())
-                            .orElseThrow(() -> new CustomException("No topic quiz found!", HttpStatus.NOT_FOUND));
+                    if (!topicQuizRepository.existsById(topicQuiz.getId())) throw new CustomException("No topic quiz found!", HttpStatus.NOT_FOUND);
 
+                    List<TopicQuizQuestion> questions = topicQuiz.getQuestions();
                     // Clear the existing questions
-                    existingQuiz.getQuestions().clear();
+                    topicQuiz.setQuestions(new ArrayList<>());
 
                     // Prepare and add new questions
-                    for (TopicQuizQuestion question : topicQuiz.getQuestions()) {
+                    for (TopicQuizQuestion question : questions) {
                         question.setId(null); // Mark as new entity
-                        question.setTopicQuizId(existingQuiz.getId());
+                        question.setTopicQuizId(topicQuiz.getId());
 
                         // Detach choices temporarily
                         List<TopicQuizQuestionChoice> choices = question.getChoices();
@@ -197,12 +197,12 @@ public class TopicService {
                         }
 
                         // Add the saved question back to the quiz
-                        existingQuiz.getQuestions().add(savedQuestion);
+                        topicQuiz.getQuestions().add(savedQuestion);
                     }
 
                     // Save the updated TopicQuiz
-                    topicQuizRepository.save(existingQuiz);
-
+                    TopicQuiz latestTopicQuiz = topicQuizRepository.save(topicQuiz);
+                    updatedTopicDTO.setData(mapper.writeValueAsString(latestTopicQuiz));
                 } catch (JsonProcessingException e) {
                     throw new CustomException("Error parsing quiz data: " + e.getMessage(), HttpStatus.BAD_REQUEST);
                 } catch (Exception e) {
