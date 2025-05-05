@@ -72,6 +72,9 @@ public class CourseService {
     }
 
     public CourseDTO createCourse(User creator, CourseDTO courseDTO) {
+        if (courseRepository.existsByTitle(courseDTO.getTitle()))
+            throw new CustomException("A course with this name already exists. Please choose a different name", HttpStatus.BAD_REQUEST);
+
         Course course = CourseMapper.mapToEntity(courseDTO);
         course.setCreator(creator);
 

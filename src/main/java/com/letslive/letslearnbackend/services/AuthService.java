@@ -53,13 +53,13 @@ public class AuthService {
         userDTO.setEmail(request.getEmail());
         userDTO.setPassword(request.getPassword());
 
-        User user = userRepository.findByEmail(userDTO.getEmail()).orElseThrow(() -> new CustomException("Email/Password is not correct!", HttpStatus.UNPROCESSABLE_ENTITY));
+        User user = userRepository.findByEmail(userDTO.getEmail()).orElseThrow(() -> new CustomException("Email not found!", HttpStatus.UNPROCESSABLE_ENTITY));
         refreshTokenService.createAndSetRefreshToken(user);
         String accessToken = SecurityUtils.createAccessToken(user.getId(), user.getRole());
         SecurityUtils.setTokenToClient(accessToken, true);
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new CustomException("Email/Password is not correct!", HttpStatus.UNAUTHORIZED);
+            throw new CustomException("Incorrect email or password!", HttpStatus.UNAUTHORIZED);
         }
 
         return UserMapper.mapToDTO(user);
