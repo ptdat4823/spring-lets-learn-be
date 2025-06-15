@@ -53,3 +53,8 @@ spring.datasource.password=root
 ```
 
 **No local installation of PostgreSQL is required — Docker handles it for you.**
+
+## ✅ Useful URLs
+
+- **Backend:** http://localhost:8080
+- **Swagger UI:** http://localhost:8080/swagger-ui/index.html#/
