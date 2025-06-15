@@ -27,6 +27,9 @@ public class SecurityConfig {
                     a.requestMatchers("/topic/**").authenticated();
                     a.requestMatchers("/question/**").authenticated();
                     a.requestMatchers("/auth/logout").permitAll();
+                    a.requestMatchers("/v3/api-docs/**").permitAll();
+                    a.requestMatchers("/swagger-ui/**").permitAll();
+                    a.requestMatchers("/swagger-ui.html").permitAll();
                     a.requestMatchers("/ws/**").permitAll();
                     a.anyRequest().permitAll();
                 })

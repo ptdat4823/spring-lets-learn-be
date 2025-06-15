@@ -42,6 +42,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         skipURLs.add("/auth/refresh");
         skipURLs.add("/auth/login");
         skipURLs.add("/auth/logout");
+        skipURLs.add("/v3/api-docs");
+        skipURLs.add("/swagger-ui");
+        skipURLs.add("/swagger-ui.html");
         skipURLs.add("/ws");
 
         return skipURLs.stream().anyMatch(skipURL -> path.startsWith(skipURL));
