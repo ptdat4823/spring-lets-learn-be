@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+my-mailmap.txt
+callback.py
